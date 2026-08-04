@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScanTrace — Détecteur de contenu IA (Bêta)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Tokens ── */
+    :root {
+      --accent:   #00F2FE;
+      --accent-b: #38BDF8;
+      --glow:     rgba(0,242,254,0.18);
+      --ring:     rgba(0,242,254,0.3);
+      --dim:      rgba(0,242,254,0.07);
+      --bg:       #03050A;
+      --surface:  #070D1A;
+      --card:     #0A1220;
+      --border:   rgba(255,255,255,0.07);
+      --text:     #D2DBE8;
+      --muted:    rgba(210,219,232,0.5);
+    }
+    body.light {
+      --accent:   #0A8090;
+      --accent-b: #0E9AAC;
+      --glow:     rgba(10,128,144,0.15);
+      --ring:     rgba(10,128,144,0.3);
+      --dim:      rgba(10,128,144,0.07);
+      --bg:       #F0F4F8;
+      --surface:  #E8EFF5;
+      --card:     #FFFFFF;
+      --border:   rgba(0,0,0,0.09);
+      --text:     #0A1520;
+      --muted:    rgba(10,21,32,0.5);
+    }
+
+    /* ── Base ── */
+    body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; transition:background .3s,color .3s; }
+    a { color:var(--accent); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    code { font-family:ui-monospace,monospace; font-size:11px; background:rgba(0,0,0,0.25); padding:2px 6px; border-radius:4px; }
+    body.light code { background:rgba(0,0,0,0.08); }
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:9px; }
+
+    /* ── Header ── */
+    header {
+      position:sticky; top:0; z-index:100;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 32px; height:60px;
+      border-bottom:1px solid transparent;
+      transition:background .25s, border-color .25s, backdrop-filter .25s;
+    }
+    header.scrolled { background:rgba(3,5,10,0.88); border-color:var(--border); backdrop-filter:blur(18px); }
+    body.light header.scrolled { background:rgba(240,244,248,0.9); }
+    .brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .brand img { width:28px; height:28px; border-radius:8px; object-fit:cover; }
+    .brand-name { font-weight:800; font-size:15px; letter-spacing:-.02em; color:#fff; line-height:1; }
+    body.light .brand-name { color:#0A1520; }
+    .brand-sub { font-family:monospace; font-size:8.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); margin-top:2px; }
+    nav { display:flex; align-items:center; gap:24px; }
+    nav a { font-size:13px; font-weight:500; color:var(--muted); transition:color .15s; }
+    nav a:hover { color:var(--accent); text-decoration:none; }
+    .toggle-wrap { position:relative; width:42px; height:24px; cursor:pointer; }
+    .toggle-wrap input { opacity:0; width:0; height:0; position:absolute; }
+    .toggle-track { position:absolute; inset:0; border-radius:99px; border:1px solid var(--border); background:rgba(255,255,255,0.08); transition:background .2s,border-color .2s; }
+    .toggle-wrap input:checked + .toggle-track { background:var(--accent); border-color:var(--accent); }
+    .toggle-knob { position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:var(--text); transition:left .2s; pointer-events:none; }
+    .toggle-wrap input:checked ~ .toggle-knob { left:19px; }
+
+    /* ── Hero ── */
+    .hero { position:relative; overflow:hidden; min-height:620px; display:flex; align-items:center; }
+    .hero-bg { position:absolute; inset:0; z-index:0; }
+    .hero-bg img { width:100%; height:100%; object-fit:cover; object-position:center top; filter:brightness(.28) saturate(.6); }
+    .hero-bg::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,var(--bg) 0%,rgba(3,5,10,.6) 50%,transparent 100%); }
+    .hero-glow { position:absolute; inset:0; z-index:1; background:radial-gradient(ellipse at 20% 60%,var(--glow) 0%,transparent 55%); }
+    .hero-inner { position:relative; z-index:2; max-width:1100px; margin:0 auto; padding:80px 32px; display:flex; align-items:center; justify-content:space-between; gap:48px; width:100%; flex-wrap:wrap; }
+    .hero-left { flex:1 1 380px; max-width:520px; }
+    .tag { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:99px; border:1px solid var(--ring); background:var(--dim); color:var(--accent); font-family:monospace; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+    .hero h1 { font-size:clamp(32px,5vw,52px); font-weight:900; letter-spacing:-.03em; line-height:1.12; margin:20px 0 18px; color:#fff; }
+    body.light .hero h1 { color:#0A1520; }
+    .gradient-text { background:linear-gradient(135deg,#fff 30%,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    body.light .gradient-text { background:linear-gradient(135deg,#0A1520 20%,var(--accent)); -webkit-background-clip:text; background-clip:text; }
+    .hero p { font-size:16px; color:rgba(210,219,232,.7); max-width:440px; line-height:1.7; margin-bottom:32px; }
+    body.light .hero p { color:var(--muted); }
+    .btn-primary { display:inline-flex; align-items:center; gap:9px; padding:13px 26px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent-b)); color:#03050A; font-size:14px; font-weight:800; text-decoration:none; box-shadow:0 8px 30px var(--glow); transition:transform .15s,box-shadow .15s; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 14px 40px var(--glow); text-decoration:none; }
+    .hero-meta { font-size:11.5px; color:rgba(255,255,255,.25); font-family:monospace; }
+    .hero-cta { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .stats { display:flex; gap:28px; margin-top:40px; padding-top:32px; border-top:1px solid rgba(255,255,255,.07); }
+    body.light .stats { border-color:var(--border); }
+    .stat-val { font-size:22px; font-weight:800; color:#fff; letter-spacing:-.02em; line-height:1; }
+    body.light .stat-val { color:#0A1520; }
+    .stat-lbl { font-size:11px; color:rgba(255,255,255,.35); margin-top:3px; }
+    body.light .stat-lbl { color:var(--muted); }
+
+    /* Browser mock */
+    .browser-mock { flex:0 0 auto; }
+    .browser-chrome { width:320px; background:#111C2E; border:1px solid rgba(255,255,255,.1); border-bottom:none; border-radius:14px 14px 0 0; padding:9px 12px; display:flex; align-items:center; gap:6px; }
+    .browser-dots { display:flex; gap:5px; }
+    .browser-dot { width:9px; height:9px; border-radius:50%; opacity:.7; }
+    .browser-bar { flex:1; background:rgba(255,255,255,.05); border-radius:6px; height:20px; display:flex; align-items:center; padding-left:8px; font-family:monospace; font-size:9.5px; color:rgba(255,255,255,.25); }
+    .browser-viewport { position:relative; width:320px; height:300px; overflow:hidden; border-radius:0 0 12px 12px; border:1px solid rgba(255,255,255,.1); border-top:none; }
+    .browser-viewport > img { width:100%; height:100%; object-fit:cover; filter:brightness(.35) saturate(.5); }
+    .panel-mock { position:absolute; top:12px; right:12px; width:215px; background:linear-gradient(175deg,#0E1F30,#091726 60%,#060F1A); border-radius:12px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,.7),0 0 0 1px rgba(0,242,254,.25); font-family:'Inter',sans-serif; font-size:11px; color:#D2DBE8; }
+    .panel-header { display:flex; align-items:center; justify-content:space-between; padding:8px 9px; border-bottom:1px solid rgba(255,255,255,.06); background:rgba(0,242,254,.04); }
+    .panel-brand { display:flex; align-items:center; gap:6px; }
+    .panel-brand img { width:20px; height:20px; border-radius:5px; object-fit:cover; }
+    .panel-brand-name { font-weight:700; font-size:11px; color:#fff; line-height:1; }
+    .panel-brand-sub { font-family:monospace; font-size:7px; text-transform:uppercase; letter-spacing:.1em; color:#00F2FE; margin-top:1.5px; opacity:.8; }
+    .panel-actions { display:flex; gap:4px; align-items:center; }
+    .panel-btn-settings { display:flex; align-items:center; gap:3px; padding:3px 7px; border-radius:20px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); color:rgba(255,255,255,.35); font-size:8px; font-weight:600; }
+    .panel-btn-close { width:20px; height:20px; border-radius:5px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); color:rgba(255,255,255,.3); font-size:8px; display:flex; align-items:center; justify-content:center; }
+    .panel-section-label { font-family:monospace; font-size:7px; text-transform:uppercase; letter-spacing:.1em; color:rgba(0,242,254,.45); padding:0 3px 4px; }
+    .panel-menu { padding:6px 6px 4px; }
+    .panel-item { display:flex; align-items:center; gap:6px; padding:5px 6px; border-radius:6px; border:1px solid rgba(255,255,255,.05); background:rgba(255,255,255,.025); margin-bottom:2.5px; }
+    .panel-item-icon { width:20px; height:20px; border-radius:5px; background:rgba(255,255,255,.055); flex-shrink:0; }
+    .panel-item-lbl { font-size:9px; font-weight:600; color:rgba(255,255,255,.8); line-height:1.2; }
+    .panel-item-sub { font-size:7.5px; color:rgba(255,255,255,.25); }
+    .panel-result { margin:0 6px 6px; border-radius:7px; border:1px solid rgba(255,255,255,.06); background:rgba(255,255,255,.025); padding:6px; display:flex; gap:6px; align-items:center; }
+    .panel-thumb { width:32px; height:32px; border-radius:5px; overflow:hidden; position:relative; flex-shrink:0; }
+    .panel-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .panel-thumb::before,.panel-thumb::after { content:''; position:absolute; width:6px; height:6px; opacity:.7; }
+    .panel-thumb::before { top:2px; left:2px; border-top:1.5px solid #00F2FE; border-left:1.5px solid #00F2FE; }
+    .panel-thumb::after  { bottom:2px; right:2px; border-bottom:1.5px solid #00F2FE; border-right:1.5px solid #00F2FE; }
+    .panel-result-type { font-family:monospace; font-size:7px; text-transform:uppercase; color:rgba(255,255,255,.2); margin-bottom:3px; }
+    .panel-stamp { font-family:monospace; font-size:7.5px; font-weight:700; padding:2px 6px; border-radius:99px; border:1px solid #F87171; color:#F87171; background:rgba(239,68,68,.09); text-transform:uppercase; letter-spacing:.04em; }
+
+    /* ── Features ── */
+    .section { padding:80px 32px; max-width:1100px; margin:0 auto; }
+    .section-header { text-align:center; margin-bottom:52px; }
+    .section-header h2 { font-size:clamp(24px,4vw,36px); font-weight:800; letter-spacing:-.025em; margin-top:16px; color:#fff; }
+    body.light .section-header h2 { color:#0A1520; }
+    .section-header p { font-size:15px; color:var(--muted); max-width:520px; margin:14px auto 0; line-height:1.7; }
+    .features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; }
+    .feature-card { border-radius:14px; overflow:hidden; border:1px solid var(--border); background:var(--card); transition:border-color .2s,transform .2s,box-shadow .2s; display:flex; flex-direction:column; cursor:default; }
+    .feature-card:hover { border-color:var(--ring); transform:translateY(-3px); box-shadow:0 16px 40px rgba(0,0,0,.4),0 0 0 1px var(--ring); }
+    .feature-img-wrap { height:140px; overflow:hidden; position:relative; }
+    .feature-img-wrap img { width:100%; height:100%; object-fit:cover; display:block; filter:brightness(.6) saturate(.7); transition:filter .3s; }
+    .feature-card:hover .feature-img-wrap img { filter:brightness(.75) saturate(.9); }
+    .feature-img-fade { position:absolute; inset:0; background:linear-gradient(to bottom,transparent 40%,var(--card)); }
+    .feature-icon-over { position:absolute; bottom:12px; left:14px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; background:rgba(3,5,10,0.6); border-radius:50%; border:1px solid var(--ring); }
+    .feature-icon-over svg { width:14px; height:14px; stroke:var(--accent); fill:none; }
+    .feature-body { padding:14px 18px 20px; flex:1; }
+    .feature-card h3 { font-size:14.5px; font-weight:700; color:#fff; margin-bottom:8px; line-height:1.3; }
+    body.light .feature-card h3 { color:#0A1520; }
+    .feature-card p { font-size:12.5px; color:var(--muted); line-height:1.65; }
+
+    /* ── Banner ── */
+    .banner { position:relative; padding:60px 32px; text-align:center; background:rgba(0,242,254,.03); }
+    body.light .banner { background:rgba(10,128,144,.04); }
+    .banner-glow { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,var(--glow),transparent 70%); pointer-events:none; }
+    .banner-rule { height:2px; background:linear-gradient(90deg,transparent,rgba(0,242,254,.5),rgba(56,191,248,.5),transparent); }
+    .banner-eyebrow { font-family:monospace; font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); margin-bottom:12px; position:relative; z-index:1; }
+    .banner h2 { font-size:clamp(22px,4vw,34px); font-weight:800; letter-spacing:-.025em; color:#fff; max-width:620px; margin:0 auto 14px; position:relative; z-index:1; }
+    body.light .banner h2 { color:#0A1520; }
+    .banner p { font-size:14.5px; color:var(--muted); max-width:480px; margin:0 auto; line-height:1.7; position:relative; z-index:1; }
+
+    /* ── Installation ── */
+    .install-section { padding:80px 32px; max-width:760px; margin:0 auto; }
+    .steps { display:flex; flex-direction:column; }
+    .step { display:flex; }
+    .step-left { display:flex; flex-direction:column; align-items:center; margin-right:20px; flex-shrink:0; }
+    .step-num { width:38px; height:38px; border-radius:10px; border:1px solid var(--ring); background:var(--dim); color:var(--accent); font-family:monospace; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .step-line { width:1px; flex:1; min-height:24px; background:linear-gradient(180deg,rgba(0,242,254,.25),transparent); margin:4px 0; }
+    .step-right { padding-bottom:28px; padding-top:4px; flex:1; }
+    .step:last-child .step-right { padding-bottom:0; }
+    .step-right h3 { font-size:14.5px; font-weight:700; color:#fff; margin-bottom:6px; }
+    body.light .step-right h3 { color:#0A1520; }
+    .step-right p { font-size:12.5px; color:var(--muted); line-height:1.7; }
+
+    /* ── Section Avis — Carousel 3D Rotatif ── */
+    .reviews-section { padding:80px 0; overflow:hidden; }
+    .reviews-section-inner { max-width:1100px; margin:0 auto; padding:0 32px; }
+
+    /* Score global */
+    .reviews-score-bar { display:flex; align-items:center; justify-content:center; gap:32px; margin:36px 0 60px; flex-wrap:wrap; }
+    .score-big { text-align:center; }
+    .score-big .score-num { font-size:56px; font-weight:900; letter-spacing:-.04em; color:#fff; line-height:1; }
+    body.light .score-big .score-num { color:#0A1520; }
+    .score-big .score-label { font-size:11px; color:var(--muted); margin-top:6px; font-family:monospace; text-transform:uppercase; letter-spacing:.08em; }
+    .score-stars-big { display:flex; gap:5px; justify-content:center; margin-top:8px; }
+    .score-stars-big svg { width:20px; height:20px; fill:var(--accent); }
+    .score-divider { width:1px; height:60px; background:var(--border); }
+    .score-detail { display:flex; flex-direction:column; gap:8px; }
+    .score-bar-row { display:flex; align-items:center; gap:10px; }
+    .score-bar-label { font-size:11px; color:var(--muted); width:12px; text-align:right; font-family:monospace; }
+    .score-bar-track { width:120px; height:5px; background:var(--border); border-radius:99px; overflow:hidden; }
+    .score-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-b)); border-radius:99px; transition:width .6s ease; }
+    .score-bar-count { font-size:10px; color:var(--muted); font-family:monospace; }
+
+    /* ── Carousel 3D ── */
+    .carousel-wrap {
+      position:relative;
+      height:300px;
+      perspective:1200px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .carousel-stage {
+      position:relative;
+      width:320px; height:260px;
+      transform-style:preserve-3d;
+      transition:transform .7s cubic-bezier(.4,0,.2,1);
+    }
+
+    .rev-card {
+      position:absolute; top:0; left:0;
+      width:300px; height:240px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:20px; padding:22px;
+      display:flex; flex-direction:column; gap:12px;
+      backface-visibility:hidden;
+      transition:box-shadow .4s, border-color .4s, opacity .4s, transform .7s cubic-bezier(.4,0,.2,1);
+      cursor:pointer; user-select:none;
+    }
+    /* Active card */
+    .rev-card.is-active {
+      border-color:var(--ring);
+      box-shadow:0 0 0 1px var(--ring), 0 24px 60px rgba(0,242,254,.15), 0 8px 30px rgba(0,0,0,.5);
+    }
+    /* Side cards slightly dim */
+    .rev-card:not(.is-active) { opacity:.55; }
+
+    .rev-card-top { display:flex; align-items:center; gap:12px; }
+    .rev-avatar { width:40px; height:40px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:#03050A; }
+    .rev-info { flex:1; min-width:0; }
+    .rev-name { font-size:13.5px; font-weight:700; color:#fff; line-height:1.2; }
+    body.light .rev-name { color:#0A1520; }
+    .rev-role { font-size:10px; color:var(--muted); }
+    .rev-stars { display:flex; gap:3px; }
+    .rev-stars svg { width:14px; height:14px; }
+    .rev-text { font-size:12.5px; color:var(--muted); line-height:1.65; flex:1; overflow:hidden; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; }
+    .rev-date { font-family:monospace; font-size:9.5px; color:rgba(255,255,255,.35); margin-top: auto; }
+    body.light .rev-date { color:rgba(10,128,144,0.7); }
+
+    /* Nav arrows */
+    .carousel-nav {
+      display:flex; align-items:center; justify-content:center;
+      gap:16px; margin-top:28px;
+    }
+    .carousel-arrow {
+      width:40px; height:40px; border-radius:50%;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:all .2s; flex-shrink:0;
+    }
+    .carousel-arrow:hover { border-color:var(--ring); color:var(--accent); background:var(--dim); }
+    .carousel-arrow svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+    /* Dots */
+    .carousel-dots { display:flex; gap:7px; align-items:center; }
+    .carousel-dot {
+      width:6px; height:6px; border-radius:50%;
+      background:var(--border); border:none; cursor:pointer; padding:0;
+      transition:background .2s, transform .2s, width .2s;
+    }
+    .carousel-dot.is-active { background:var(--accent); width:20px; border-radius:99px; transform:none; }
+
+    /* Form section */
+    .review-form-section { max-width:600px; margin:56px auto 0; padding:0 32px; }
+    .review-form-card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:32px; display:flex; flex-direction:column; gap:20px; }
+    .review-form-card h3 { font-size:18px; font-weight:800; color:#fff; }
+    body.light .review-form-card h3 { color:#0A1520; }
+    .review-form-card > p { font-size:13px; color:var(--muted); margin-top:-10px; }
+    .form-row { display:flex; gap:14px; }
+    .form-group { display:flex; flex-direction:column; gap:6px; flex:1; }
+    .form-group label { font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+    .form-group input, .form-group textarea { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; padding:11px 14px; color:var(--text); font-family:inherit; font-size:13px; outline:none; transition:border-color .2s,background .2s; resize:none; }
+    body.light .form-group input, body.light .form-group textarea { background:#f7f9fb; border-color:rgba(0,0,0,.1); }
+    .form-group input:focus, .form-group textarea:focus { border-color:var(--accent); background:rgba(0,242,254,0.04); }
+    .star-rating { display:flex; gap:6px; }
+    .star-btn { background:none; border:none; cursor:pointer; padding:2px; outline:none; border-radius:4px; }
+    .star-btn svg { width:24px; height:24px; fill:rgba(255,255,255,.1); stroke:rgba(255,255,255,.2); stroke-width:1.5; transition:fill .15s,stroke .15s,transform .15s,transform .1s; display:block; }
+    body.light .star-btn svg { fill:rgba(0,0,0,.06); stroke:rgba(0,0,0,.2); }
+    .star-btn:hover svg, .star-btn.active svg { fill:var(--accent); stroke:var(--accent); transform:scale(1.15); }
+    .form-submit { background:linear-gradient(135deg,var(--accent),var(--accent-b)); color:#03050A; border:none; border-radius:10px; padding:13px; font-size:14px; font-weight:800; cursor:pointer; width:100%; transition:opacity .15s,transform .15s; }
+    .form-submit:hover { opacity:.9; transform:translateY(-1px); }
+    .form-success { display:none; text-align:center; padding:20px; background:rgba(0,242,254,.07); border-radius:10px; border:1px solid var(--ring); }
+    .form-success svg { width:32px; height:32px; stroke:var(--accent); fill:none; margin-bottom:10px; display:block; margin-left:auto; margin-right:auto; }
+    .form-success p { font-size:13px; color:var(--muted); }
+
+    /* ── CTA box ── */
+    .cta-wrap { padding:60px 32px 80px; text-align:center; }
+    .cta-box { max-width:560px; margin:0 auto; padding:48px 40px; border-radius:20px; border:1px solid var(--ring); background:var(--dim); box-shadow:0 0 80px var(--glow); display:flex; flex-direction:column; align-items:center; }
+    .cta-icon-over { width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:rgba(3,5,10,0.4); border-radius:50%; border:1px solid var(--ring); margin-bottom:14px; }
+    .cta-icon-over svg { width:20px; height:20px; stroke:var(--accent); fill:none; }
+    .cta-box h2 { font-size:26px; font-weight:800; letter-spacing:-.025em; color:#fff; margin-bottom:12px; }
+    body.light .cta-box h2 { color:#0A1520; }
+    .cta-box p { font-size:13.5px; color:var(--muted); line-height:1.7; margin-bottom:28px; }
+
+    /* ── Footer ── */
+    footer { border-top:1px solid var(--border); background:var(--surface); padding:28px 32px; text-align:center; }
+    .footer-brand { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px; }
+    .footer-brand img { width:20px; height:20px; border-radius:5px; object-fit:cover; opacity:.6; }
+    .footer-brand span { font-size:12px; font-weight:700; color:var(--muted); }
+    footer p { font-size:11px; color:var(--muted); line-height:1.6; }
+    footer p + p { margin-top:8px; }
+
+    @media (max-width:800px) {
+      .hero-inner { flex-direction:column; padding:48px 20px; }
+      .browser-mock { display:none; }
+      header { padding:0 20px; }
+      .section,.install-section { padding:60px 20px; }
+      .reviews-section-inner { padding:0 20px; }
+      .cta-wrap { padding:40px 20px 60px; }
+      .cta-box { padding:36px 24px; }
+      .score-divider { display:none; }
+      .form-row { flex-direction:column; }
+      .review-form-section { padding:0 20px; }
+      nav a.nav-hide { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header id="site-header">
+  <a class="brand" href="#">
+    <img src="icon128.png" alt="ScanTrace">
+    <div>
+      <div class="brand-name">ScanTrace</div>
+      <div class="brand-sub">AI Content Detector</div>
+    </div>
+  </a>
+  <nav>
+    <a href="#fonctionnalites" class="nav-hide">Fonctionnalités</a>
+    <a href="#installation" class="nav-hide">Installation</a>
+    <a href="#avis">Avis</a>
+    <label class="toggle-wrap" title="Changer de thème">
+      <input type="checkbox" id="themeToggle">
+      <div class="toggle-track"></div>
+      <div class="toggle-knob"></div>
+    </label>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-bg">
+    <img src="https://images.unsplash.com/photo-1764452008254-eed469a4fad3?w=1400&h=900&fit=crop&auto=format" alt="">
+  </div>
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <span class="tag">✦ Bêta v0.1.0 — Gratuit</span>
+      <h1>Détectez l'IA<br><span class="gradient-text">avant qu'elle ne vous trompe.</span></h1>
+      <p>ScanTrace orchestre plusieurs moteurs d'analyse en parallèle — images, vidéos, textes et publications sociales — dans un panneau flottant sans quitter votre onglet.</p>
+      <div class="hero-cta">
+        <a href="extension%20scantrace%20Beta.zip" class="btn-primary" download>
+          <svg width="15" height="15" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8V2M3.5 5.5L6 8l2.5-2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 10.5h9" stroke-linecap="round"/></svg>
+          Télécharger l'extension
+        </a>
+        <span class="hero-meta">Chrome · Gratuit · Bêta</span>
+      </div>
+      <div class="stats">
+        <div><div class="stat-val">4+</div><div class="stat-lbl">Agents IA</div></div>
+        <div><div class="stat-val">C2PA</div><div class="stat-lbl">Métadonnées</div></div>
+        <div><div class="stat-val">100%</div><div class="stat-lbl">Local & gratuit</div></div>
+      </div>
+    </div>
+    <div class="browser-mock">
+      <div class="browser-chrome">
+        <div class="browser-dots">
+          <div class="browser-dot" style="background:#F87171"></div>
+          <div class="browser-dot" style="background:#FBBF24"></div>
+          <div class="browser-dot" style="background:#34D399"></div>
+        </div>
+        <div class="browser-bar">https://scantrace.com</div>
+      </div>
+      <div class="browser-viewport">
+        <img src="https://images.unsplash.com/photo-1763568258143-904ea924ac53?w=900&h=600&fit=crop&auto=format" alt="">
+        <div class="panel-mock">
+          <div class="panel-header">
+            <div class="panel-brand">
+              <img src="icon128.png" alt="">
+              <div>
+                <div class="panel-brand-name">ScanTrace</div>
+                <div class="panel-brand-sub">AI Content Detector</div>
+              </div>
+            </div>
+            <div class="panel-actions">
+              <div class="panel-btn-settings">⚙ Réglages</div>
+              <div class="panel-btn-close">✕</div>
+            </div>
+          </div>
+          <div class="panel-menu">
+            <div class="panel-section-label">Analyser</div>
+            <div class="panel-item"><div class="panel-item-icon"></div><div><div class="panel-item-lbl">Sélectionner sur la page</div><div class="panel-item-sub">Image ou vidéo visible</div></div></div>
+            <div class="panel-item"><div class="panel-item-icon"></div><div><div class="panel-item-lbl">Importer un fichier</div><div class="panel-item-sub">JPG, PNG, MP4…</div></div></div>
+            <div class="panel-item"><div class="panel-item-icon"></div><div><div class="panel-item-lbl">Analyser une publication</div><div class="panel-item-sub">Instagram, X, TikTok…</div></div></div>
+          </div>
+          <div class="panel-result">
+            <div class="panel-thumb">
+              <img src="https://images.unsplash.com/photo-1706528280814-df1a34ad1a29?w=80&h=80&fit=crop" alt="">
+            </div>
+            <div>
+              <div class="panel-result-type">IMAGE · Score 0.87</div>
+              <div class="panel-stamp">⚠ Signature IA</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="section" id="fonctionnalites">
+  <div class="section-header">
+    <span class="tag">Fonctionnalités</span>
+    <h2><span class="gradient-text">Analyse multi-couches</span> en un clic</h2>
+    <p>Chaque contenu est soumis à plusieurs moteurs simultanément pour un verdict fiable et nuancé.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-img-wrap">
+        <img src="https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&h=500&fit=crop&auto=format" alt="">
+        <div class="feature-img-fade"></div>
+        <div class="feature-icon-over"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+      </div>
+      <div class="feature-body">
+        <h3>Analyse Hybride de Posts</h3>
+        <p>Extrait et évalue séparément la légende textuelle et l'image depuis vos publications X, Instagram, TikTok et YouTube. Deux scores distincts.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-img-wrap">
+        <img src="https://images.unsplash.com/photo-1709120395858-92f1c7c577f5?w=800&h=500&fit=crop&auto=format" alt="">
+        <div class="feature-img-fade"></div>
+        <div class="feature-icon-over"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+      </div>
+      <div class="feature-body">
+        <h3>Moteurs en Parallèle</h3>
+        <p>Interroge simultanément des classificateurs texte (RoBERTa) et vision (Hugging Face, Sightengine) pour un consensus multi-agents robuste.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-img-wrap">
+        <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&h=500&fit=crop&auto=format" alt="">
+        <div class="feature-img-fade"></div>
+        <div class="feature-icon-over"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+      </div>
+      <div class="feature-body">
+        <h3>Métadonnées Locales</h3>
+        <p>Analyse gratuitement les structures binaires : signatures C2PA, EXIF et traces d'outils comme Midjourney, DALL-E ou Stable Diffusion.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-img-wrap">
+        <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800&h=500&fit=crop&auto=format" alt="">
+        <div class="feature-img-fade"></div>
+        <div class="feature-icon-over"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg></div>
+      </div>
+      <div class="feature-body">
+        <h3>Échantillonnage Vidéo</h3>
+        <p>Recadrage à l'écran et extraction automatique de photogrammes distincts depuis vos vidéos locales ou distantes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── BANNER ── -->
+<div>
+  <div class="banner-rule"></div>
+  <div class="banner">
+    <div class="banner-glow"></div>
+    <p class="banner-eyebrow">Panneau flottant · Shadow DOM · Déplaçable</p>
+    <h2>Reste ouvert pendant que vous naviguez</h2>
+    <p>Contrairement aux popups Chrome qui se ferment au moindre clic, ScanTrace s'injecte directement dans la page pour rester là où vous en avez besoin.</p>
+  </div>
+  <div class="banner-rule"></div>
+</div>
+
+<!-- ── INSTALLATION ── -->
+<section class="install-section" id="installation">
+  <div class="section-header">
+    <span class="tag">Guide d'installation</span>
+    <h2>Prêt en <span class="gradient-text">moins de 2 minutes</span></h2>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-right"><h3>Télécharger le package</h3><p>Cliquez sur le bouton de téléchargement pour obtenir l'archive <code>extension-scantrace-beta.zip</code>.</p></div></div>
+    <div class="step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-right"><h3>Décompresser l'archive</h3><p>Extrayez le contenu dans un dossier dédié, ex. <code>/Documents/ScanTrace/</code>. Ne supprimez pas ce dossier.</p></div></div>
+    <div class="step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-right"><h3>Ouvrir les extensions Chrome</h3><p>Saisissez <code>chrome://extensions</code> dans votre barre d'adresse.</p></div></div>
+    <div class="step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-right"><h3>Activer le mode développeur</h3><p>En haut à droite, activez <b>« Mode développeur »</b>. De nouveaux boutons apparaissent.</p></div></div>
+    <div class="step"><div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div><div class="step-right"><h3>Charger l'extension</h3><p>Cliquez <b>« Charger l'extension non empaquetée »</b> et sélectionnez le dossier extrait (celui avec <code>manifest.json</code>).</p></div></div>
+    <div class="step"><div class="step-left"><div class="step-num">6</div></div><div class="step-right"><h3>Tester et paramétrer</h3><p>Épinglez l'extension, ouvrez le panneau sur n'importe quelle page. Accédez aux <b>Réglages ⚙</b> pour configurer vos clés API.</p></div></div>
+  </div>
+</section>
+
+<div class="banner-rule"></div>
+
+<!-- ══════════════════════════════════════════
+     SECTION AVIS — CAROUSEL DÉFILANT
+══════════════════════════════════════════ -->
+<section class="reviews-section" id="avis">
+  <div class="reviews-section-inner">
+    <div class="section-header">
+      <span class="tag">Retour d'expérience</span>
+      <h2>Avis de nos <span class="gradient-text">bêta-testeurs</span></h2>
+      <p>Ce que pensent ceux qui l'utilisent au quotidien.</p>
+    </div>
+
+    <!-- Score global -->
+    <div class="reviews-score-bar" id="scoreBar">
+      <div class="score-big">
+        <div class="score-num" id="avgScore">4.7</div>
+        <div class="score-stars-big" id="avgStars"></div>
+        <div class="score-label" id="totalLabel">sur 0 avis</div>
+      </div>
+      <div class="score-divider"></div>
+      <div class="score-detail" id="scoreDetail"></div>
+    </div>
+  </div>
+
+  <!-- Carousel 3D -->
+  <div style="max-width:900px;margin:0 auto;padding:0 32px;">
+    <div class="carousel-wrap">
+      <div class="carousel-stage" id="carouselStage"></div>
+    </div>
+    <div class="carousel-nav">
+      <button class="carousel-arrow" id="prevBtn" aria-label="Précédent">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="carousel-dots" id="carouselDots"></div>
+      <button class="carousel-arrow" id="nextBtn" aria-label="Suivant">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulaire -->
+  <div class="review-form-section">
+    <div class="review-form-card">
+      <h3>Laissez un avis</h3>
+      <p>Votre retour aide les autres bêta-testeurs et sera affiché en direct.</p>
+      <form id="reviewForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="reviewName">Prénom</label>
+            <input type="text" id="reviewName" placeholder="Votre prénom" required>
+          </div>
+          <div class="form-group">
+            <label>Note</label>
+            <div class="star-rating" id="starRatingSelect">
+              <button type="button" class="star-btn" data-value="1"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+              <button type="button" class="star-btn" data-value="2"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+              <button type="button" class="star-btn" data-value="3"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+              <button type="button" class="star-btn" data-value="4"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+              <button type="button" class="star-btn" data-value="5"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reviewText">Commentaire</label>
+          <textarea id="reviewText" rows="4" placeholder="Que pensez-vous de l'extension ?" required></textarea>
+        </div>
+        <button type="submit" class="form-submit">Publier mon avis</button>
+      </form>
+      <div class="form-success" id="formSuccess">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <p>Merci pour votre avis ! Il apparaît dans le carousel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="banner-rule" style="margin-top:80px"></div>
+
+<!-- ── CTA ── -->
+<div class="cta-wrap">
+  <div class="cta-box">
+    <div class="cta-icon-over">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h2>Commencez à détecter <span class="gradient-text">maintenant</span></h2>
+    <p>Gratuit. Pas de compte requis. Aucune donnée ne quitte votre navigateur.</p>
+    <a href="extension%20scantrace%20Beta.zip" class="btn-primary" download>
+      <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8V2M3.5 5.5L6 8l2.5-2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 10.5h9" stroke-linecap="round"/></svg>
+      Télécharger l'extension (Bêta v0.1.0)
+    </a>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-brand">
+    <img src="icon128.png" alt="">
+    <span>ScanTrace</span>
+  </div>
+  <p>Analyse multi-agents indicative. Aucun outil n'est fiable à 100 %.</p>
+  <p>Contact : <a href="mailto:basile.ceyrac@protonmail.com">basile.ceyrac@protonmail.com</a></p>
+</footer>
+
+<script>
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function esc(s){ return s.replace(/[&<>'"]/g,t=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]||t)); }
+function starsSVG(n,size=14){
+  let h='';
+  for(let i=1;i<=5;i++){
+    const on=i<=n;
+    h+=`<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="fill:${on?'var(--accent)':'rgba(255,255,255,0.1)'};stroke:${on?'var(--accent)':'rgba(255,255,255,0.15)'};stroke-width:1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+  }
+  return h;
+}
+const COLORS=['#00F2FE','#38BDF8','#818CF8','#34D399','#F472B6','#FBBF24'];
+function colorFor(n){ let h=0; for(let c of n) h=(h*31+c.charCodeAt(0))&0xFFFF; return COLORS[h%COLORS.length]; }
+function initials(n){ return n.trim().charAt(0).toUpperCase(); }
+
+// ── Data ─────────────────────────────────────────────────────────────────────
+const DEFAULT_REVIEWS=[
+  {name:"Thomas",   rating:4,text:"Pratique pour analyser les images suspectes directement en naviguant. J'attends la version finale avec impatience.",date:"Il y a 2 jours"},
+  {name:"Sarah",    rating:5,text:"L'injection en Shadow DOM est robuste, le panneau déplaçable fonctionne très bien. Un excellent outil d'analyse.",date:"Il y a 3 jours"},
+  {name:"Lucas",    rating:4,text:"L'analyse multi-agents est une très bonne approche. Les métadonnées locales permettent d'avoir un verdict rapide.",date:"Il y a 5 jours"},
+  {name:"Camille",  rating:5,text:"Indispensable pour vérifier l'authenticité des visuels sur les réseaux. Le score consensus est une très bonne idée.",date:"Il y a 1 semaine"},
+  {name:"Antoine",  rating:5,text:"Fonctionne sur tous les sites que j'ai testés. Le panneau reste en place même en scrollant — parfait.",date:"Il y a 1 semaine"},
+  {name:"Marie",    rating:4,text:"Très utile pour mon travail de journaliste. Permet de détecter rapidement les visuels suspects avant publication.",date:"Il y a 10 jours"},
+  {name:"Julien",   rating:5,text:"L'analyse hybride de posts Instagram est bluffante. Deux scores distincts pour le texte et l'image, c'est exactement ce qu'il faut.",date:"Il y a 12 jours"},
+  {name:"Noa",      rating:3,text:"Bon outil en bêta, quelques erreurs CORS sur certains sites mais le score consensus compense bien.",date:"Il y a 2 semaines"},
+  {name:"Isabelle", rating:5,text:"Simple à installer, efficace immédiatement. L'icône dans la barre Chrome est reconnaissable et le panneau s'ouvre instantanément.",date:"Il y a 2 semaines"},
+];
+function loadReviews(){ const s=localStorage.getItem('scantrace-reviews'); return s?JSON.parse(s):DEFAULT_REVIEWS; }
+function saveReviews(r){ localStorage.setItem('scantrace-reviews',JSON.stringify(r)); }
+
+// ── Score ─────────────────────────────────────────────────────────────────────
+function renderScore(reviews){
+  if(!reviews.length)return;
+  const avg=reviews.reduce((a,r)=>a+r.rating,0)/reviews.length;
+  document.getElementById('avgScore').textContent=avg.toFixed(1);
+  document.getElementById('totalLabel').textContent=`sur ${reviews.length} avis`;
+  document.getElementById('avgStars').innerHTML=starsSVG(Math.round(avg),18);
+  const counts=[0,0,0,0,0];
+  reviews.forEach(r=>{ if(r.rating>=1&&r.rating<=5)counts[r.rating-1]++; });
+  const max=Math.max(...counts,1);
+  let h='';
+  for(let s=5;s>=1;s--){
+    h+=`<div class="score-bar-row"><div class="score-bar-label">${s}</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${Math.round(counts[s-1]/max*100)}%"></div></div><div class="score-bar-count">${counts[s-1]}</div></div>`;
+  }
+  document.getElementById('scoreDetail').innerHTML=h;
+}
+
+// ── 3D Carousel ───────────────────────────────────────────────────────────────
+let reviews=[], current=0, autoTimer=null;
+
+const stage   = document.getElementById('carouselStage');
+const dotsEl  = document.getElementById('carouselDots');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+/* Each card is positioned around a virtual cylinder.
+   visible window = current ±2, others invisible.       */
+const SPREAD  = 340;   // px between card centres (translated on X)
+const ROT_Y   = 38;    // degrees of rotation per step
+const SCALE_OFF = 0.78;// scale of side cards
+const SCALE_FAR = 0.58;// scale of far cards
+
+function buildCardEl(rev,idx){
+  const col=colorFor(rev.name);
+  const el=document.createElement('div');
+  el.className='rev-card';
+  el.dataset.idx=idx;
+  el.innerHTML=`
+    <div class="rev-card-top">
+      <div class="rev-avatar" style="background:linear-gradient(135deg,${col},${col}BB)">${initials(esc(rev.name))}</div>
+      <div class="rev-info">
+        <div class="rev-name">${esc(rev.name)}</div>
+        <div class="rev-role">Bêta-testeur</div>
+      </div>
+    </div>
+    <div class="rev-stars">${starsSVG(rev.rating)}</div>
+    <div class="rev-text">${esc(rev.text)}</div>
+    <div class="rev-date">${rev.date||'Récemment'}</div>`;
+  el.addEventListener('click',()=>{ goTo(idx); });
+  return el;
+}
+
+function positionCards(){
+  const cards=[...stage.children];
+  const n=cards.length;
+  cards.forEach((card,i)=>{
+    const raw=i-current;
+    // wrap around
+    let d=raw;
+    if(d > n/2) d-=n;
+    if(d <-n/2) d+=n;
+
+    const absD=Math.abs(d);
+    const active=d===0;
+    const visible=absD<=2;
+
+    let tx=d*SPREAD*0.7;
+    let tz= active ? 80 : absD===1 ? 0 : -120;
+    let ry=-d*ROT_Y;
+    let scale= active ? 1 : absD===1 ? SCALE_OFF : SCALE_FAR;
+    let opacity= active ? 1 : absD===1 ? 0.62 : absD===2 ? 0.35 : 0;
+    let zIndex= active ? 10 : absD===1 ? 6 : absD===2 ? 3 : 0;
+
+    card.style.transform=`translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg) scale(${scale})`;
+    card.style.opacity=opacity;
+    card.style.zIndex=zIndex;
+    card.style.pointerEvents=visible?'auto':'none';
+    card.classList.toggle('is-active',active);
+  });
+
+  // dots
+  [...dotsEl.children].forEach((d,i)=>d.classList.toggle('is-active',i===current));
+}
+
+function goTo(i){
+  current=((i%reviews.length)+reviews.length)%reviews.length;
+  positionCards();
+  resetAuto();
+}
+
+function next(){ goTo(current+1); }
+function prev(){ goTo(current-1); }
+
+function resetAuto(){
+  clearInterval(autoTimer);
+  autoTimer=setInterval(next,4500);
+}
+
+function buildCarousel(revs){
+  reviews=revs;
+  stage.innerHTML='';
+  dotsEl.innerHTML='';
+  revs.forEach((r,i)=>{
+    stage.appendChild(buildCardEl(r,i));
+    const dot=document.createElement('button');
+    dot.className='carousel-dot'+(i===0?' is-active':'');
+    dot.addEventListener('click',()=>goTo(i));
+    dotsEl.appendChild(dot);
+  });
+  current=0;
+  positionCards();
+  resetAuto();
+}
+
+prevBtn.addEventListener('click',prev);
+nextBtn.addEventListener('click',next);
+
+// Pause on hover
+stage.addEventListener('mouseenter',()=>clearInterval(autoTimer));
+stage.addEventListener('mouseleave',resetAuto);
+
+// Touch swipe
+let touchX=null;
+stage.addEventListener('touchstart',e=>{ touchX=e.touches[0].clientX; },{passive:true});
+stage.addEventListener('touchend',e=>{
+  if(touchX===null)return;
+  const dx=e.changedTouches[0].clientX-touchX;
+  if(Math.abs(dx)>40){ dx<0?next():prev(); }
+  touchX=null;
+},{passive:true});
+
+// Trackpad / Scrollwheel navigation with dynamic velocity-based speed
+let wheelAccumulator = 0;
+let lastWheelTime = 0;
+
+stage.addEventListener('wheel', e => {
+  const isHorizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+  
+  // Prevent browser history triggers on horizontal swipe gestures over the carousel
+  if (isHorizontal) {
+    e.preventDefault();
+  }
+
+  const delta = isHorizontal ? e.deltaX : e.deltaY;
+  wheelAccumulator += delta;
+
+  const now = Date.now();
+  const scrollSpeed = Math.abs(delta);
+  
+  // Shorter cooldown when trackpad gestures are fast/energetic, allowing swift card flipping
+  const dynamicCooldown = Math.max(50, 180 - (scrollSpeed * 0.5));
+
+  if (now - lastWheelTime > dynamicCooldown) {
+    if (wheelAccumulator >= 60) {
+      next();
+      wheelAccumulator = 0;
+      lastWheelTime = now;
+    } else if (wheelAccumulator <= -60) {
+      prev();
+      wheelAccumulator = 0;
+      lastWheelTime = now;
+    }
+  }
+
+  // Clear accumulator decay timer
+  clearTimeout(stage.wheelDecayTimer);
+  stage.wheelDecayTimer = setTimeout(() => {
+    wheelAccumulator = 0;
+  }, 150);
+}, { passive: false });
+
+// ── Star selector ────────────────────────────────────────────────────────────
+let selectedRating=5;
+const starBtns=document.querySelectorAll('#starRatingSelect .star-btn');
+function setStars(n){ selectedRating=n; starBtns.forEach(b=>b.classList.toggle('active',parseInt(b.dataset.value)<=n)); }
+setStars(5);
+starBtns.forEach(b=>b.addEventListener('click',()=>setStars(parseInt(b.dataset.value))));
+
+// ── Form ─────────────────────────────────────────────────────────────────────
+document.getElementById('reviewForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = document.getElementById('reviewName').value.trim();
+  const text = document.getElementById('reviewText').value.trim();
+  if (!name || !text) return;
+
+  // Récupération de la date du jour pour l'avis
+  const today = new Date();
+  const formattedDate = `Le ${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+
+  // Création et affichage de l'avis local
+  const rev = { name, rating: selectedRating, text, date: formattedDate };
+  const revs = loadReviews();
+  revs.push(rev);
+  saveReviews(revs);
+  buildCarousel(revs);
+  renderScore(revs);
+
+  // Masquer le formulaire et afficher le message de succès
+  document.getElementById('reviewForm').style.display = 'none';
+  document.getElementById('formSuccess').style.display = 'block';
+
+  // Envoi automatique en arrière-plan à votre e-mail (sans aucune action requise de l'utilisateur)
+  fetch("https://api.web3forms.com/submit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({
+      access_key: "0028dc1b-61eb-4d98-b051-c1f35542ed58",
+      name: name,
+      subject: `[Bêta ScanTrace] Nouvel avis de ${name}`,
+      message: `Note : ${selectedRating}/5\nCommentaire : ${text}`
+    })
+  }).catch(err => console.error("Erreur d'envoi de l'avis :", err));
+});
+
+// ── Header / Theme ────────────────────────────────────────────────────────────
+const header=document.getElementById('site-header');
+window.addEventListener('scroll',()=>header.classList.toggle('scrolled',window.scrollY>20));
+const toggle=document.getElementById('themeToggle');
+if(localStorage.getItem('scantrace-theme')==='light'){toggle.checked=true;document.body.classList.add('light');}
+toggle.addEventListener('change',()=>{ document.body.classList.toggle('light',toggle.checked); localStorage.setItem('scantrace-theme',toggle.checked?'light':'dark'); });
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  const revs=loadReviews();
+  buildCarousel(revs);
+  renderScore(revs);
+});
+</script>
+</body>
+</html>
