@@ -538,6 +538,127 @@
     /* ── Animated stat counters (no extra markup needed, just used by JS) ── */
     .stat-val { font-variant-numeric:tabular-nums; }
 
+    /* ── Review Form — Terminal redesign ── */
+    .review-form-card { overflow: hidden; gap: 0; padding: 0; }
+    .rfc-header, .sfc-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px;
+      background: linear-gradient(90deg, var(--dim), transparent);
+      border-bottom: 1px solid var(--border);
+    }
+    .rfc-header-left, .sfc-header-left { display: flex; align-items: center; gap: 8px; }
+    .rfc-header-left svg, .sfc-header-left svg { width: 14px; height: 14px; stroke: var(--accent); fill: none; stroke-width: 2; flex-shrink: 0; }
+    .rfc-label, .sfc-label {
+      font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--accent); font-weight: 700;
+    }
+    .rfc-cursor { font-family: monospace; font-size: 12px; color: var(--accent); animation: cursorBlink .85s step-end infinite; line-height: 1; }
+    @keyframes cursorBlink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+    .rfc-scan {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent-b) 70%, transparent);
+      opacity: .45;
+    }
+    .rfc-body, .sfc-body { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+    .rfc-subtitle { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+    .review-form-card:focus-within {
+      border-color: var(--ring);
+      box-shadow: 0 0 0 1px var(--ring), 0 20px 50px rgba(0,242,254,.07);
+    }
+
+    /* Stars redesign */
+    .star-rating-wrap { display: flex; flex-direction: column; gap: 7px; }
+    .star-btn svg { width: 26px !important; height: 26px !important; }
+    .star-btn:hover svg, .star-btn.active svg { filter: none; transform: scale(1.1) !important; }
+    .star-verdict {
+      font-family: monospace; font-size: 10px; text-transform: uppercase;
+      letter-spacing: .09em; color: var(--accent); min-height: 14px;
+    }
+
+    /* ── Suggestion form — Issue tracker redesign ── */
+    .sug-form-wrap {
+      display: flex; flex-direction: column; gap: 0;
+      background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+      overflow: hidden;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .sug-form-wrap:focus-within {
+      border-color: var(--ring);
+      box-shadow: 0 0 0 1px var(--ring), 0 20px 50px rgba(0,242,254,.07);
+    }
+    .sug-form-meta {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1px solid var(--border);
+    }
+    .sug-cat-option {
+      position: relative; cursor: pointer;
+      padding: 16px 18px;
+      border-right: 1px solid var(--border);
+      transition: background .15s;
+      user-select: none;
+    }
+    .sug-cat-option:last-child { border-right: none; }
+    .sug-cat-option input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .sug-cat-label {
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .sug-cat-tag {
+      font-family: monospace; font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; padding: 2px 7px; border-radius: 4px; border: 1px solid;
+      display: inline-block; width: fit-content;
+    }
+    .sug-cat-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; }
+    .sug-cat-desc { font-size: 10.5px; color: var(--muted); }
+    .sug-cat-indicator {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      opacity: 0; transition: opacity .2s;
+    }
+    .sug-cat-option input:checked ~ .sug-cat-label .sug-cat-name { color: #fff; }
+    .sug-cat-option input:checked ~ .sug-cat-indicator { opacity: 1; }
+    .sug-cat-option:has(input:checked) { background: rgba(255,255,255,.025); }
+
+    /* Couleurs par catégorie */
+    .sug-cat-option[data-cat="idee"] .sug-cat-tag { color: var(--accent); border-color: rgba(0,242,254,.35); background: rgba(0,242,254,.08); }
+    .sug-cat-option[data-cat="idee"] .sug-cat-indicator { background: var(--accent); }
+    .sug-cat-option[data-cat="bug"] .sug-cat-tag { color: #F87171; border-color: rgba(248,113,113,.35); background: rgba(248,113,113,.08); }
+    .sug-cat-option[data-cat="bug"] .sug-cat-indicator { background: #F87171; }
+    .sug-cat-option[data-cat="amelioration"] .sug-cat-tag { color: #FBBF24; border-color: rgba(251,191,36,.35); background: rgba(251,191,36,.08); }
+    .sug-cat-option[data-cat="amelioration"] .sug-cat-indicator { background: #FBBF24; }
+
+    .sug-form-body { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 18px; }
+    .sug-form-body textarea { min-height: 110px; }
+    .sug-char-row { display: flex; align-items: center; justify-content: space-between; }
+    .sug-char-count { font-family: monospace; font-size: 9.5px; color: var(--muted); }
+
+    .cat-btn { display: flex; align-items: center; gap: 5px; }
+    .cat-btn.active { box-shadow: 0 0 12px rgba(0,242,254,.12); }
+
+    /* Suggestion empty state improved */
+    .suggestion-empty {
+      background: linear-gradient(135deg, var(--dim), transparent);
+      position: relative; overflow: hidden;
+    }
+    .suggestion-empty::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: linear-gradient(var(--accent) 1px, transparent 1px), linear-gradient(90deg, var(--accent) 1px, transparent 1px);
+      background-size: 30px 30px;
+      opacity: .04;
+    }
+    .suggestion-empty-icon {
+      width: 52px; height: 52px; margin: 0 auto 16px;
+      border-radius: 14px; border: 1px solid rgba(0,242,254,.25);
+      background: rgba(0,242,254,.06);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; z-index: 1;
+    }
+    .suggestion-empty-icon svg { width: 24px; height: 24px; stroke: var(--accent); fill: none; }
+    .suggestion-empty h4 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 8px; position: relative; z-index: 1; }
+    .suggestion-empty p { position: relative; z-index: 1; }
+
+    /* Form submit button icon */
+    .form-submit { display: flex; align-items: center; justify-content: center; gap: 9px; }
+
     /* ── Carousel loading skeleton ── */
     .carousel-skeleton {
       width:300px; height:240px; border-radius:20px;
@@ -568,11 +689,6 @@
     <a href="#installation" class="nav-hide">Installation</a>
     <a href="#avis" class="nav-hide">Avis</a>
     <a href="#suggestions">Idées</a>
-    <label class="toggle-wrap" title="Changer de thème">
-      <input type="checkbox" id="themeToggle">
-      <div class="toggle-track"></div>
-      <div class="toggle-knob"></div>
-    </label>
   </nav>
 </header>
 
@@ -794,34 +910,50 @@
   <!-- Formulaire -->
   <div class="review-form-section">
     <div class="review-form-card reveal">
-      <h3>Laissez un avis</h3>
-      <p>Votre retour aide les autres bêta-testeurs et sera affiché en direct.</p>
-      <form id="reviewForm">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="reviewName">Prénom</label>
-            <input type="text" id="reviewName" placeholder="Votre prénom" required>
-          </div>
-          <div class="form-group">
-            <label>Note</label>
-            <div class="star-rating" id="starRatingSelect">
-              <button type="button" class="star-btn" data-value="1"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-              <button type="button" class="star-btn" data-value="2"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-              <button type="button" class="star-btn" data-value="3"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-              <button type="button" class="star-btn" data-value="4"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-              <button type="button" class="star-btn" data-value="5"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+      <div class="rfc-header">
+        <div class="rfc-header-left">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span class="rfc-label">// PUBLIER_UN_AVIS</span>
+          <span class="rfc-cursor">█</span>
+        </div>
+        <div class="live-badge"><span class="live-dot"></span>En direct</div>
+      </div>
+      <div class="rfc-scan"></div>
+      <div class="rfc-body">
+        <p class="rfc-subtitle">Votre retour aide les autres bêta-testeurs et sera affiché immédiatement dans le carousel.</p>
+        <form id="reviewForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reviewName">Prénom</label>
+              <input type="text" id="reviewName" placeholder="ex. Thomas" required>
+            </div>
+            <div class="form-group">
+              <label>Note</label>
+              <div class="star-rating-wrap">
+                <div class="star-rating" id="starRatingSelect">
+                  <button type="button" class="star-btn" data-value="1"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                  <button type="button" class="star-btn" data-value="2"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                  <button type="button" class="star-btn" data-value="3"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                  <button type="button" class="star-btn" data-value="4"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                  <button type="button" class="star-btn" data-value="5"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                </div>
+                <span class="star-verdict" id="starVerdict">Excellent ✦</span>
+              </div>
             </div>
           </div>
+          <div class="form-group">
+            <label for="reviewText">Commentaire</label>
+            <textarea id="reviewText" rows="4" placeholder="Que pensez-vous de l'extension ?" required></textarea>
+          </div>
+          <button type="submit" class="form-submit">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Publier mon avis
+          </button>
+        </form>
+        <div class="form-success" id="formSuccess">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <p>Merci pour votre avis ! Il apparaît dans le carousel.</p>
         </div>
-        <div class="form-group">
-          <label for="reviewText">Commentaire</label>
-          <textarea id="reviewText" rows="4" placeholder="Que pensez-vous de l'extension ?" required></textarea>
-        </div>
-        <button type="submit" class="form-submit">Publier mon avis</button>
-      </form>
-      <div class="form-success" id="formSuccess">
-        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <p>Merci pour votre avis ! Il apparaît dans le carousel.</p>
       </div>
     </div>
   </div>
@@ -840,27 +972,54 @@
   </div>
 
   <div class="suggestions-layout">
-    <div class="review-form-card reveal">
-      <h3>Proposer une idée</h3>
-      <p>Les suggestions les plus votées remontent en haut de la liste.</p>
-      <form id="suggestionForm">
-        <div class="form-group">
-          <label>Catégorie</label>
-          <div class="category-select" id="categorySelect">
-            <button type="button" class="cat-btn active" data-value="idee">💡 Idée</button>
-            <button type="button" class="cat-btn" data-value="bug">🐞 Bug</button>
-            <button type="button" class="cat-btn" data-value="amelioration">⚙️ Amélioration</button>
+    <div class="sug-form-wrap reveal">
+      <div class="sug-form-meta" id="categorySelect">
+        <label class="sug-cat-option" data-cat="idee">
+          <input type="radio" name="sugCat" value="idee" checked>
+          <div class="sug-cat-label">
+            <span class="sug-cat-tag">Idée</span>
+            <span class="sug-cat-name">Nouvelle fonctionnalité</span>
+            <span class="sug-cat-desc">Une idée à explorer</span>
           </div>
+          <div class="sug-cat-indicator"></div>
+        </label>
+        <label class="sug-cat-option" data-cat="bug">
+          <input type="radio" name="sugCat" value="bug">
+          <div class="sug-cat-label">
+            <span class="sug-cat-tag">Bug</span>
+            <span class="sug-cat-name">Problème détecté</span>
+            <span class="sug-cat-desc">Comportement inattendu</span>
+          </div>
+          <div class="sug-cat-indicator"></div>
+        </label>
+        <label class="sug-cat-option" data-cat="amelioration">
+          <input type="radio" name="sugCat" value="amelioration">
+          <div class="sug-cat-label">
+            <span class="sug-cat-tag">Amélio</span>
+            <span class="sug-cat-name">Affiner l'existant</span>
+            <span class="sug-cat-desc">Peaufiner ce qui existe</span>
+          </div>
+          <div class="sug-cat-indicator"></div>
+        </label>
+      </div>
+      <div class="sug-form-body">
+        <form id="suggestionForm" style="display:flex;flex-direction:column;gap:16px;">
+          <div class="form-group">
+            <label for="suggestionText">Décrivez votre suggestion</label>
+            <textarea id="suggestionText" rows="4" placeholder="Soyez précis — les suggestions claires obtiennent plus de votes." required maxlength="400"></textarea>
+            <div class="sug-char-row">
+              <span class="sug-char-count" id="sugCharCount">0 / 400</span>
+            </div>
+          </div>
+          <button type="submit" class="form-submit">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Soumettre à la communauté
+          </button>
+        </form>
+        <div class="form-success" id="suggestionSuccess" style="display:none;">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <p>Merci ! Votre suggestion est en ligne, les autres bêta-testeurs peuvent voter pour elle.</p>
         </div>
-        <div class="form-group">
-          <label for="suggestionText">Votre suggestion</label>
-          <textarea id="suggestionText" rows="4" placeholder="Décrivez votre idée en quelques mots…" required></textarea>
-        </div>
-        <button type="submit" class="form-submit">Envoyer la suggestion</button>
-      </form>
-      <div class="form-success" id="suggestionSuccess">
-        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <p>Merci ! Votre suggestion est en ligne, les autres bêta-testeurs peuvent voter pour elle.</p>
       </div>
     </div>
 
@@ -907,6 +1066,22 @@ function starsSVG(n,size=14){
   for(let i=1;i<=5;i++){
     const on=i<=n;
     h+=`<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="fill:${on?'var(--accent)':'rgba(255,255,255,0.1)'};stroke:${on?'var(--accent)':'rgba(255,255,255,0.15)'};stroke-width:1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+  }
+  return h;
+}
+function starsHalfSVG(avg,size=18){
+  let h='';
+  for(let i=1;i<=5;i++){
+    const full=avg>=i;
+    const half=!full&&avg>=i-0.5;
+    const uid='hs'+i+'_'+Math.random().toString(36).slice(2,6);
+    if(full){
+      h+=`<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="fill:var(--accent);stroke:var(--accent);stroke-width:1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+    } else if(half){
+      h+=`<svg width="${size}" height="${size}" viewBox="0 0 24 24"><defs><clipPath id="${uid}"><rect x="0" y="0" width="12" height="24"/></clipPath></defs><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" style="fill:rgba(255,255,255,0.1);stroke:rgba(255,255,255,0.15);stroke-width:1.5"/><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" clip-path="url(#${uid})" style="fill:var(--accent);stroke:var(--accent);stroke-width:1.5"/></svg>`;
+    } else {
+      h+=`<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="fill:rgba(255,255,255,0.1);stroke:rgba(255,255,255,0.15);stroke-width:1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+    }
   }
   return h;
 }
@@ -957,7 +1132,7 @@ function renderScore(reviews, liveReviews){
   const avg=reviews.reduce((a,r)=>a+r.rating,0)/reviews.length;
   document.getElementById('avgScore').textContent=avg.toFixed(1);
   document.getElementById('totalLabel').textContent=`sur ${reviews.length} avis`;
-  document.getElementById('avgStars').innerHTML=starsSVG(Math.round(avg),18);
+  document.getElementById('avgStars').innerHTML=starsHalfSVG(avg,18);
   const counts=[0,0,0,0,0];
   reviews.forEach(r=>{ if(r.rating>=1&&r.rating<=5)counts[r.rating-1]++; });
   const max=Math.max(...counts,1);
@@ -1161,7 +1336,13 @@ stage.addEventListener('wheel', e => {
 // ── Star selector ────────────────────────────────────────────────────────────
 let selectedRating=5;
 const starBtns=document.querySelectorAll('#starRatingSelect .star-btn');
-function setStars(n){ selectedRating=n; starBtns.forEach(b=>b.classList.toggle('active',parseInt(b.dataset.value)<=n)); }
+const STAR_LABELS=['Décevant','Passable','Correct','Très bien','Excellent ✦'];
+function setStars(n){
+  selectedRating=n;
+  starBtns.forEach(b=>b.classList.toggle('active',parseInt(b.dataset.value)<=n));
+  const vEl=document.getElementById('starVerdict');
+  if(vEl) vEl.textContent=STAR_LABELS[n-1]||'';
+}
 setStars(5);
 starBtns.forEach(b=>b.addEventListener('click',()=>setStars(parseInt(b.dataset.value))));
 
@@ -1234,8 +1415,11 @@ function renderSuggestionBoard(docs){
   if(!docs.length){
     board.innerHTML = `
       <div class="suggestion-empty">
-        <svg viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.6 1.3 4.2 2.5 5.5.7.8 1.1 1.6 1.2 2.5h6.6c.1-.9.5-1.7 1.2-2.5C17.7 13.2 19 11.6 19 9a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
-        <p>Aucune suggestion pour l'instant.<br>Soyez le·la premier·ère à proposer une idée !</p>
+        <div class="suggestion-empty-icon">
+          <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.6 1.3 4.2 2.5 5.5.7.8 1.1 1.6 1.2 2.5h6.6c.1-.9.5-1.7 1.2-2.5C17.7 13.2 19 11.6 19 9a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+        </div>
+        <h4>Aucune suggestion pour l'instant</h4>
+        <p>Soyez le·la premier·ère à proposer une idée.<br>Les plus votées guident notre roadmap.</p>
       </div>`;
     return;
   }
@@ -1291,20 +1475,28 @@ function listenSuggestions(){
   });
 }
 
-// Sélecteur de catégorie
+// Sélecteur de catégorie (radio)
 let selectedCategory = 'idee';
-document.querySelectorAll('#categorySelect .cat-btn').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    selectedCategory = b.dataset.value;
-    document.querySelectorAll('#categorySelect .cat-btn').forEach(x=>x.classList.toggle('active', x===b));
-  });
+document.querySelectorAll('#categorySelect input[type=radio]').forEach(r=>{
+  r.addEventListener('change', ()=>{ selectedCategory = r.value; });
 });
+
+// Compteur de caractères
+const sugTextarea = document.getElementById('suggestionText');
+const sugCharCount = document.getElementById('sugCharCount');
+if(sugTextarea && sugCharCount){
+  sugTextarea.addEventListener('input', ()=>{
+    sugCharCount.textContent = sugTextarea.value.length + ' / 400';
+  });
+}
 
 document.getElementById('suggestionForm').addEventListener('submit', e=>{
   e.preventDefault();
   const text = document.getElementById('suggestionText').value.trim();
   if(!text) return;
 
+  const checkedCat = document.querySelector('#categorySelect input[type=radio]:checked');
+  if(checkedCat) selectedCategory = checkedCat.value;
   const submitBtn = document.querySelector('#suggestionForm .form-submit');
   submitBtn.disabled = true;
   submitBtn.textContent = 'Envoi en cours…';
@@ -1333,9 +1525,6 @@ document.getElementById('suggestionForm').addEventListener('submit', e=>{
 // ── Header / Theme ────────────────────────────────────────────────────────────
 const header=document.getElementById('site-header');
 window.addEventListener('scroll',()=>header.classList.toggle('scrolled',window.scrollY>20));
-const toggle=document.getElementById('themeToggle');
-if(localStorage.getItem('scantrace-theme')==='light'){toggle.checked=true;document.body.classList.add('light');}
-toggle.addEventListener('change',()=>{ document.body.classList.toggle('light',toggle.checked); localStorage.setItem('scantrace-theme',toggle.checked?'light':'dark'); });
 
 // ── Scroll reveal ────────────────────────────────────────────────────────────
 const revealEls = document.querySelectorAll('.reveal');
