@@ -2555,6 +2555,42 @@ window.addEventListener('DOMContentLoaded', ()=>{
   listenReviews(({combined,live})=>{ buildCarousel(combined); renderScore(combined,live); });
   listenSuggestions();
 });
+  // --- SCANTRACE PRO TRACKING (Daily & Global) ---
+(function() {
+    const now = new Date();
+    const dateId = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    
+    const globalRef = db.collection('admin_stats').doc('global');
+    const dailyRef = db.collection('admin_stats').doc('daily').collection('days').doc(dateId);
+
+    // 1. Visites (1 fois par session)
+    if (!sessionStorage.getItem('scantrace_v2_tracked')) {
+        const inc = firebase.firestore.FieldValue.increment(1);
+        // Update Global
+        globalRef.set({ totalVisits: inc }, { merge: true });
+        // Update Daily
+        dailyRef.set({ visits: inc, date: dateId }, { merge: true });
+        
+        sessionStorage.setItem('scantrace_v2_tracked', 'true');
+    }
+
+    // 2. Téléchargements
+    document.querySelectorAll('a[download]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const inc = firebase.firestore.FieldValue.increment(1);
+            globalRef.set({ totalDownloads: inc }, { merge: true });
+            dailyRef.set({ downloads: inc }, { merge: true });
+        });
+    });
+
+    // 3. Présence Temps Réel
+    const sessionID = Math.random().toString(36).substring(7);
+    const presenceRef = db.collection('presence').doc(sessionID);
+    const heartbeat = () => presenceRef.set({ lastSeen: Date.now() });
+    heartbeat();
+    setInterval(heartbeat, 20000);
+    window.addEventListener('beforeunload', () => presenceRef.delete());
+})();
 </script>
 </body>
 </html>
