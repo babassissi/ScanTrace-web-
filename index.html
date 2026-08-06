@@ -2555,48 +2555,54 @@ window.addEventListener('DOMContentLoaded', ()=>{
   listenReviews(({combined,live})=>{ buildCarousel(combined); renderScore(combined,live); });
   listenSuggestions();
 });
-// --- SCANTRACE TRACKER FINAL ---
-function initScanTraceTracking() {
-    console.log("Démarrage du tracking...");
-    const globalRef = db.collection('admin_stats').doc('global');
-    
-    const now = new Date();
-    const dateId = now.toISOString().split('T')[0];
-    const dailyRef = db.collection('admin_stats').doc('daily').collection('days').doc(dateId);
+// --- REMPLACEMENT DU BLOC FINAL ---
+window.addEventListener('DOMContentLoaded', () => {
+  // Ton code existant
+  listenReviews(({combined,live}) => { buildCarousel(combined); renderScore(combined,live); });
+  listenSuggestions();
 
-    const inc = firebase.firestore.FieldValue.increment(1);
+  // --- NOUVEAU : SYSTÈME DE STATISTIQUES SCANTRACE ---
+  console.log("🚀 Initialisation du Tracker ScanTrace...");
 
-    // 1. Visites Totales
-    if (!sessionStorage.getItem('st_v3')) {
-        console.log("Nouvelle session : +1 visite");
-        // On utilise .set avec {merge: true} pour être sûr que le doc est créé la 1ère fois
-        globalRef.set({ totalVisits: inc }, { merge: true });
-        dailyRef.set({ visits: inc, date: dateId }, { merge: true });
-        sessionStorage.setItem('st_v3', 'true');
+  try {
+    const statsRef = db.collection('admin_stats').doc('global');
+    const todayId = new Date().toISOString().split('T')[0];
+    const dailyRef = db.collection('admin_stats').doc('daily').collection('days').doc(todayId);
+
+    // 1. Visites (Une fois par session)
+    if (!sessionStorage.getItem('st_track_v4')) {
+      console.log("📈 Nouvelle visite détectée");
+      const inc = firebase.firestore.FieldValue.increment(1);
+      statsRef.set({ totalVisits: inc }, { merge: true });
+      dailyRef.set({ visits: inc, date: todayId }, { merge: true });
+      sessionStorage.setItem('st_track_v4', 'true');
     }
 
-    // 2. Téléchargements
-    document.querySelectorAll('a[download]').forEach(btn => {
-        btn.onclick = () => {
-            console.log("Téléchargement détecté !");
-            globalRef.set({ totalDownloads: inc }, { merge: true });
-            dailyRef.set({ downloads: inc, date: dateId }, { merge: true });
-        };
+    // 2. Téléchargements (Détection immédiate)
+    const downloadLinks = document.querySelectorAll('a[download]');
+    console.log("🔎 Boutons download trouvés :", downloadLinks.length);
+
+    downloadLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        console.log("✅ Clic de téléchargement enregistré !");
+        const inc = firebase.firestore.FieldValue.increment(1);
+        statsRef.set({ totalDownloads: inc }, { merge: true });
+        dailyRef.set({ downloads: inc, date: todayId }, { merge: true });
+      });
     });
 
-    // 3. Présence (Live)
+    // 3. Live (Présence)
     const sessionID = Math.random().toString(36).substring(7);
     const presenceRef = db.collection('presence').doc(sessionID);
     const heartbeat = () => presenceRef.set({ lastSeen: Date.now() });
+    
     heartbeat();
     setInterval(heartbeat, 20000);
-    window.onbeforeunload = () => presenceRef.delete();
-}
+    window.addEventListener('beforeunload', () => presenceRef.delete());
 
-// Sécurité : On attend que le DOM soit chargé ET que Firebase soit dispo
-window.addEventListener('load', () => {
-    // On attend 1 seconde pour être sûr que Firebase est bien initialisé
-    setTimeout(initScanTraceTracking, 1000);
+  } catch (e) {
+    console.error("❌ Erreur critique Tracker :", e);
+  }
 });
 </script>
 </body>
