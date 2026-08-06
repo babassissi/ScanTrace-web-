@@ -2012,7 +2012,7 @@
     <span>ScanTrace</span>
   </div>
   <p>Analyse multi-agents indicative. Aucun outil n'est fiable à 100 %.</p>
-  <p>Contact : <a href="mailto:basile.ceyrac@protonmail.com">basile.ceyrac@protonmail.com</a></p>
+  <p>Contact : <a href="mailto:scantrace@proton.me">scantrace@proton.me</a></p>
 </footer>
 
 <!-- ═══════════════════════════════════════════════
@@ -2264,10 +2264,10 @@ document.getElementById('reviewForm').addEventListener('submit', e=>{
     submitBtn.disabled=false;
     submitBtn.textContent='Publier mon avis';
   });
-  fetch("https://api.web3forms.com/submit",{
+ fetch("https://api.web3forms.com/submit",{
     method:"POST",
     headers:{"Content-Type":"application/json","Accept":"application/json"},
-    body:JSON.stringify({access_key:"0028dc1b-61eb-4d98-b051-c1f35542ed58",name,subject:`[Bêta ScanTrace] Nouvel avis de ${name}`,message:`Note : ${selectedRating}/5\nCommentaire : ${text}`})
+    body:JSON.stringify({access_key:"6e4b4bf6-0131-4c38-be1a-e80bb8bcb7e8",name,subject:`[Bêta ScanTrace] Nouvel avis de ${name}`,message:`Note : ${selectedRating}/5\nCommentaire : ${text}`})
   }).catch(err=>console.error('Web3Forms error:', err));
 });
 
@@ -2478,39 +2478,68 @@ if(sugTextarea&&sugCharEl){
   sugTextarea.addEventListener('input', ()=>{ sugCharEl.textContent=sugTextarea.value.length+' / 400'; });
 }
 
-document.getElementById('suggestionForm').addEventListener('submit', e=>{
-  e.preventDefault();
-  const text=document.getElementById('suggestionText').value.trim();
-  if(!text) return;
-  const formEl=document.getElementById('suggestionForm');
-  const successEl=document.getElementById('suggestionSuccess');
-  const submitBtn=formEl.querySelector('.sug-submit');
-  submitBtn.disabled=true; submitBtn.textContent='Envoi en cours…';
-  const today=new Date();
-  const dateLabel=`Le ${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
-  suggestionsCol.add({text,category:selectedCategory,votes:0,dateLabel,createdAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>{
-    formEl.reset();
-    if(sugCharEl) sugCharEl.textContent='0 / 400';
-    submitBtn.disabled=false; submitBtn.textContent='Soumettre';
-    formEl.style.display='none';
-    successEl.style.display='block';
-    // Le formulaire revient automatiquement — le client peut enchaîner idée / bug / amélioration sans recharger la page.
-    clearTimeout(successEl._hideTimer);
-    successEl._hideTimer=setTimeout(()=>{
-      successEl.style.display='none';
-      formEl.style.display='flex';
-      document.getElementById('suggestionText').focus();
-    },2200);
-  }).catch(err=>{
-    console.error('Suggestion submit error:', err);
-    alert('Une erreur est survenue. Merci de réessayer.');
-    submitBtn.disabled=false; submitBtn.textContent='Soumettre';
-  });
-  const catLabel = selectedCategory==='bug' ? 'Bug' : selectedCategory==='amelioration' ? 'Amélioration' : 'Idée';
-  fetch("https://api.web3forms.com/submit",{
+document.getElementById('suggestionForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const text = document.getElementById('suggestionText').value.trim();
+    if (!text) return;
+
+    const formEl = document.getElementById('suggestionForm');
+    const successEl = document.getElementById('suggestionSuccess');
+    const submitBtn = formEl.querySelector('.sug-submit');
+    
+    // On détermine l'étiquette (Bug, Idée, etc.)
+    const catLabel = selectedCategory === 'bug' ? 'Bug' : selectedCategory === 'amelioration' ? 'Amélioration' : 'Idée';
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Envoi en cours…';
+
+    // 1. ENVOI DE L'EMAIL (Web3Forms)
+    fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+            access_key: "6e4b4bf6-0131-4c38-be1a-e80bb8bcb7e8",
+            name: "Système ScanTrace",
+            subject: `[ScanTrace Idée] Nouveau retour : ${catLabel}`,
+            message: `Catégorie : ${catLabel}\n\nSuggestion :\n${text}`
+        })
+    }).catch(err => console.error('Web3Forms error:', err));
+
+    // 2. ENREGISTREMENT DANS FIREBASE
+    const today = new Date();
+    const dateLabel = `Le ${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+
+    suggestionsCol.add({
+        text,
+        category: selectedCategory,
+        votes: 0,
+        dateLabel,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        // Succès : on réinitialise l'interface
+        formEl.reset();
+        const charCountEl = document.getElementById('sugCharCount');
+        if (charCountEl) charCountEl.textContent = '0 / 400';
+        
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Soumettre';
+        formEl.style.display = 'none';
+        successEl.style.display = 'block';
+        
+        setTimeout(() => {
+            successEl.style.display = 'none';
+            formEl.style.display = 'flex';
+        }, 2500);
+    }).catch(err => {
+        console.error('Firebase error:', err);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Soumettre';
+    });
+
+ fetch("https://api.web3forms.com/submit",{
     method:"POST",
     headers:{"Content-Type":"application/json","Accept":"application/json"},
-    body:JSON.stringify({access_key:"0028dc1b-61eb-4d98-b051-c1f35542ed58",name:"ScanTrace",subject:`[Bêta ScanTrace] Nouvelle suggestion — ${catLabel}`,message:`Catégorie : ${catLabel}\nSuggestion : ${text}`})
+    body:JSON.stringify({access_key:"6e4b4bf6-0131-4c38-be1a-e80bb8bcb7e8",name:"ScanTrace",subject:`[Bêta ScanTrace] Nouvelle suggestion — ${catLabel}`,message:`Catégorie : ${catLabel}\nSuggestion : ${text}`})
   }).catch(err=>console.error('Web3Forms error:', err));
 });
 
@@ -2555,54 +2584,48 @@ window.addEventListener('DOMContentLoaded', ()=>{
   listenReviews(({combined,live})=>{ buildCarousel(combined); renderScore(combined,live); });
   listenSuggestions();
 });
-// --- REMPLACEMENT DU BLOC FINAL ---
-window.addEventListener('DOMContentLoaded', () => {
-  // Ton code existant
-  listenReviews(({combined,live}) => { buildCarousel(combined); renderScore(combined,live); });
-  listenSuggestions();
+// --- SCANTRACE TRACKER FINAL ---
+function initScanTraceTracking() {
+    console.log("Démarrage du tracking...");
+    const globalRef = db.collection('admin_stats').doc('global');
+    
+    const now = new Date();
+    const dateId = now.toISOString().split('T')[0];
+    const dailyRef = db.collection('admin_stats').doc('daily').collection('days').doc(dateId);
 
-  // --- NOUVEAU : SYSTÈME DE STATISTIQUES SCANTRACE ---
-  console.log("🚀 Initialisation du Tracker ScanTrace...");
+    const inc = firebase.firestore.FieldValue.increment(1);
 
-  try {
-    const statsRef = db.collection('admin_stats').doc('global');
-    const todayId = new Date().toISOString().split('T')[0];
-    const dailyRef = db.collection('admin_stats').doc('daily').collection('days').doc(todayId);
-
-    // 1. Visites (Une fois par session)
-    if (!sessionStorage.getItem('st_track_v4')) {
-      console.log("📈 Nouvelle visite détectée");
-      const inc = firebase.firestore.FieldValue.increment(1);
-      statsRef.set({ totalVisits: inc }, { merge: true });
-      dailyRef.set({ visits: inc, date: todayId }, { merge: true });
-      sessionStorage.setItem('st_track_v4', 'true');
+    // 1. Visites Totales
+    if (!sessionStorage.getItem('st_v3')) {
+        console.log("Nouvelle session : +1 visite");
+        // On utilise .set avec {merge: true} pour être sûr que le doc est créé la 1ère fois
+        globalRef.set({ totalVisits: inc }, { merge: true });
+        dailyRef.set({ visits: inc, date: dateId }, { merge: true });
+        sessionStorage.setItem('st_v3', 'true');
     }
 
-    // 2. Téléchargements (Détection immédiate)
-    const downloadLinks = document.querySelectorAll('a[download]');
-    console.log("🔎 Boutons download trouvés :", downloadLinks.length);
-
-    downloadLinks.forEach(link => {
-      link.addEventListener('click', () => {
-        console.log("✅ Clic de téléchargement enregistré !");
-        const inc = firebase.firestore.FieldValue.increment(1);
-        statsRef.set({ totalDownloads: inc }, { merge: true });
-        dailyRef.set({ downloads: inc, date: todayId }, { merge: true });
-      });
+    // 2. Téléchargements
+    document.querySelectorAll('a[download]').forEach(btn => {
+        btn.onclick = () => {
+            console.log("Téléchargement détecté !");
+            globalRef.set({ totalDownloads: inc }, { merge: true });
+            dailyRef.set({ downloads: inc, date: dateId }, { merge: true });
+        };
     });
 
-    // 3. Live (Présence)
+    // 3. Présence (Live)
     const sessionID = Math.random().toString(36).substring(7);
     const presenceRef = db.collection('presence').doc(sessionID);
     const heartbeat = () => presenceRef.set({ lastSeen: Date.now() });
-    
     heartbeat();
     setInterval(heartbeat, 20000);
-    window.addEventListener('beforeunload', () => presenceRef.delete());
+    window.onbeforeunload = () => presenceRef.delete();
+}
 
-  } catch (e) {
-    console.error("❌ Erreur critique Tracker :", e);
-  }
+// Sécurité : On attend que le DOM soit chargé ET que Firebase soit dispo
+window.addEventListener('load', () => {
+    // On attend 1 seconde pour être sûr que Firebase est bien initialisé
+    setTimeout(initScanTraceTracking, 1000);
 });
 </script>
 </body>
