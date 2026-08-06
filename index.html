@@ -2555,42 +2555,49 @@ window.addEventListener('DOMContentLoaded', ()=>{
   listenReviews(({combined,live})=>{ buildCarousel(combined); renderScore(combined,live); });
   listenSuggestions();
 });
-  // --- SCANTRACE PRO TRACKING (Daily & Global) ---
-(function() {
-    const now = new Date();
-    const dateId = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    
+// --- SCANTRACE TRACKER FINAL ---
+function initScanTraceTracking() {
+    console.log("Démarrage du tracking...");
     const globalRef = db.collection('admin_stats').doc('global');
+    
+    const now = new Date();
+    const dateId = now.toISOString().split('T')[0];
     const dailyRef = db.collection('admin_stats').doc('daily').collection('days').doc(dateId);
 
-    // 1. Visites (1 fois par session)
-    if (!sessionStorage.getItem('scantrace_v2_tracked')) {
-        const inc = firebase.firestore.FieldValue.increment(1);
-        // Update Global
+    const inc = firebase.firestore.FieldValue.increment(1);
+
+    // 1. Visites Totales
+    if (!sessionStorage.getItem('st_v3')) {
+        console.log("Nouvelle session : +1 visite");
+        // On utilise .set avec {merge: true} pour être sûr que le doc est créé la 1ère fois
         globalRef.set({ totalVisits: inc }, { merge: true });
-        // Update Daily
         dailyRef.set({ visits: inc, date: dateId }, { merge: true });
-        
-        sessionStorage.setItem('scantrace_v2_tracked', 'true');
+        sessionStorage.setItem('st_v3', 'true');
     }
 
     // 2. Téléchargements
     document.querySelectorAll('a[download]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const inc = firebase.firestore.FieldValue.increment(1);
+        btn.onclick = () => {
+            console.log("Téléchargement détecté !");
             globalRef.set({ totalDownloads: inc }, { merge: true });
-            dailyRef.set({ downloads: inc }, { merge: true });
-        });
+            dailyRef.set({ downloads: inc, date: dateId }, { merge: true });
+        };
     });
 
-    // 3. Présence Temps Réel
+    // 3. Présence (Live)
     const sessionID = Math.random().toString(36).substring(7);
     const presenceRef = db.collection('presence').doc(sessionID);
     const heartbeat = () => presenceRef.set({ lastSeen: Date.now() });
     heartbeat();
     setInterval(heartbeat, 20000);
-    window.addEventListener('beforeunload', () => presenceRef.delete());
-})();
+    window.onbeforeunload = () => presenceRef.delete();
+}
+
+// Sécurité : On attend que le DOM soit chargé ET que Firebase soit dispo
+window.addEventListener('load', () => {
+    // On attend 1 seconde pour être sûr que Firebase est bien initialisé
+    setTimeout(initScanTraceTracking, 1000);
+});
 </script>
 </body>
 </html>
