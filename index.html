@@ -2520,7 +2520,12 @@ document.getElementById('reviewForm').addEventListener('submit', e=>{
  fetch("https://api.web3forms.com/submit",{
     method:"POST",
     headers:{"Content-Type":"application/json","Accept":"application/json"},
-    body:JSON.stringify({access_key:"6e4b4bf6-0131-4c38-be1a-e80bb8bcb7e8",name,subject:`[Bêta ScanTrace] Nouvel avis de ${name}`,message:`Note : ${selectedRating}/5\nCommentaire : ${text}`})
+    body:JSON.stringify({
+      access_key:"6e4b4bf6-0131-4c38-be1a-e80bb8bcb7e8", // TA NOUVELLE CLÉ
+      name,
+      subject:`[Bêta ScanTrace] Nouvel avis de ${name}`,
+      message:`Note : ${selectedRating}/5\nCommentaire : ${text}`
+    })
   }).catch(err=>console.error('Web3Forms error:', err));
 });
 
@@ -2739,13 +2744,49 @@ document.getElementById('suggestionForm').addEventListener('submit', e => {
     const formEl = document.getElementById('suggestionForm');
     const successEl = document.getElementById('suggestionSuccess');
     const submitBtn = formEl.querySelector('.sug-submit');
-    
-    // On détermine l'étiquette (Bug, Idée, etc.)
     const catLabel = selectedCategory === 'bug' ? 'Bug' : selectedCategory === 'amelioration' ? 'Amélioration' : 'Idée';
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Envoi en cours…';
 
+    // 1. ENVOI DE L'EMAIL (C'est ce bloc qui répare le bug)
+    fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+            access_key: "6e4b4bf6-0131-4c38-be1a-e80bb8bcb7e8",
+            name: "Système ScanTrace",
+            subject: `[ScanTrace Idée] Nouveau retour : ${catLabel}`,
+            message: `Catégorie : ${catLabel}\n\nSuggestion :\n${text}`
+        })
+    }).catch(err => console.error('Web3Forms error:', err));
+
+    // 2. ENREGISTREMENT DANS FIREBASE (Ton système actuel)
+    const today = new Date();
+    const dateLabel = `Le ${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+
+    suggestionsCol.add({
+        text,
+        category: selectedCategory,
+        votes: 0,
+        dateLabel,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        formEl.reset();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Soumettre';
+        formEl.style.display = 'none';
+        successEl.style.display = 'block';
+        setTimeout(() => {
+            successEl.style.display = 'none';
+            formEl.style.display = 'flex';
+        }, 2500);
+    }).catch(err => {
+        console.error('Firebase error:', err);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Soumettre';
+    });
+});
     // 1. ENVOI DE L'EMAIL (Web3Forms)
     fetch("https://api.web3forms.com/submit", {
         method: "POST",
@@ -2794,7 +2835,6 @@ document.getElementById('suggestionForm').addEventListener('submit', e => {
     headers:{"Content-Type":"application/json","Accept":"application/json"},
     body:JSON.stringify({access_key:"6e4b4bf6-0131-4c38-be1a-e80bb8bcb7e8",name:"ScanTrace",subject:`[Bêta ScanTrace] Nouvelle suggestion — ${catLabel}`,message:`Catégorie : ${catLabel}\nSuggestion : ${text}`})
   }).catch(err=>console.error('Web3Forms error:', err));
-});
 
 // ── Header scroll ─────────────────────────────────────────────────────────────
 const hdr=document.getElementById('site-header');
