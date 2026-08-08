@@ -749,7 +749,6 @@
     .feature-card.f-small .feature-body { padding: 10px 14px 16px; }
     .feature-card.f-small .feature-body h3 { font-size: 12.5px; margin-bottom: 5px; }
     .feature-card.f-small .feature-body p { font-size: 10.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
     .feature-img-wrap { height: 140px; overflow: hidden; position: relative; }
     .feature-img-wrap img {
       width: 100%; height: 100%; object-fit: cover; display: block;
@@ -987,8 +986,6 @@
       height: 310px;
       perspective: 1400px;
       display: flex; align-items: center; justify-content: center;
-      mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
-      -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
     }
     .carousel-stage {
       position: relative;
@@ -998,14 +995,14 @@
     .rev-card {
       position: absolute; top: 0; left: 0;
       width: 300px;
-      background: rgba(10,16,32,0.7);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      background: rgba(10,16,32,0.88);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 20px;
       padding: 24px;
       display: flex; flex-direction: column; gap: 12px;
-      backface-visibility: hidden;
+      -webkit-font-smoothing: antialiased;
       transition: box-shadow 0.4s, border-color 0.4s, opacity 0.4s, transform 0.65s cubic-bezier(0.4,0,0.2,1);
       cursor: pointer;
       box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
@@ -1018,7 +1015,7 @@
         0 0 40px rgba(0,212,255,0.1),
         inset 0 1px 0 rgba(0,212,255,0.1);
     }
-    .rev-card:not(.is-active) { opacity: 0.5; }
+    .rev-card:not(.is-active) { opacity: 0.8; }
 
     .rev-quote { position: absolute; top: 18px; right: 18px; width: 22px; height: 22px; opacity: 0.1; }
     .rev-quote svg { width: 100%; height: 100%; fill: var(--cyan); }
@@ -1261,7 +1258,6 @@
     .sug-carousel-frame {
       border-radius: 24px;
       background: rgba(255,255,255,0.02);
-      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255,255,255,0.07);
       padding: 40px 14px 20px;
       position: relative;
@@ -1352,18 +1348,7 @@
     .sug-carousel-date { font-family: monospace; font-size: 9.5px; color: var(--muted); }
 
     .sug-carousel-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; }
-    .sug-carousel-btn {
-      width: 40px; height: 40px; border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(12px);
-      color: var(--text-hi); cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-    }
-    .sug-carousel-btn:hover { border-color: rgba(0,212,255,0.35); color: var(--cyan); background: rgba(0,212,255,0.08); box-shadow: 0 0 16px rgba(0,212,255,0.15); }
-    .sug-carousel-btn:active { transform: scale(0.93); }
-    .sug-carousel-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; box-shadow: none; }
+    .sug-carousel-btn { display: none !important; }
     .sug-dots { display: flex; gap: 8px; align-items: center; }
     .sug-dot {
       width: 6px; height: 6px; border-radius: 50%;
@@ -1662,7 +1647,7 @@
     <a href="#installation" class="nav-hide">Installation</a>
     <a href="#avis" class="nav-hide">Avis</a>
     <a href="#suggestions">Idées</a>
-    <a href="#bot-x" id="nav-bot-link">Bot X</a>
+
     <a href="#changelog" class="nav-hide">Changelog</a>
     <a href="extension%20scantrace%20Beta.zip" class="nav-cta" download>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8V2M3.5 5.5L6 8l2.5-2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 10.5h9" stroke-linecap="round"/></svg>
@@ -1975,116 +1960,6 @@
       </div>
     </div>
   </div>
-</section>
-
-<div class="rule"></div>
-
-<!-- ═══════════════════════════════════════════════
-     BOT X CONFIGURATION
-═══════════════════════════════════════════════ -->
-<section class="section" id="bot-x">
-  <div class="section-header reveal">
-    <span class="tag">ScanTrace Suite</span>
-    <h2>Intégration <span class="gradient-text">Robot X (Twitter)</span></h2>
-    <p>Associez votre compte Twitter pour soumettre des analyses d'images ou de vidéos directement en mentionnant notre robot sur vos réseaux.</p>
-  </div>
-
-  <div class="review-form-section" style="max-width: 680px;">
-    <!-- État 1 : Non connecté (Écran de verrouillage) -->
-    <div id="bot-unlocked-state" class="bot-lock-card reveal">
-      <div class="bot-lock-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      </div>
-      <h3 style="color:#fff; font-size:16px;">Espace membre requis</h3>
-      <p style="font-size:13px; color:var(--muted); max-width:380px; margin:0 auto 10px;">Veuillez vous connecter ou vous inscrire sur ScanTrace pour lier votre pseudo Twitter et interagir avec le robot d'analyse.</p>
-      <button onclick="openAuthModal()" class="btn-primary">Se connecter maintenant</button>
-    </div>
-
-    <!-- État 2 : Connecté (Formulaire d'enregistrement du pseudo) -->
-    <div id="bot-locked-state" class="bot-config-card reveal" style="display: none;">
-      <h3 style="color:#fff; font-size:18px; margin-bottom: 8px;">Enregistrer votre pseudo Twitter</h3>
-      <p style="font-size:13px; color:var(--muted); margin-bottom: 24px;">Le robot répondra publiquement à vos mentions uniquement si votre compte figure dans la base sécurisée.</p>
-      
-      <form id="twitterRegisterForm" style="display:flex; flex-direction:column; gap:16px;">
-        <div class="form-group">
-          <label for="twitterUsernameInput">Votre identifiant Twitter</label>
-          <div class="input-addon-wrapper">
-            <span class="input-addon">@</span>
-            <input type="text" id="twitterUsernameInput" class="input-with-addon" placeholder="pseudo" required>
-          </div>
-        </div>
-        <button type="submit" class="form-submit">
-          Enregistrer mon compte Twitter
-        </button>
-      </form>
-      <div class="form-success" id="twitterSuccess" style="margin-top:16px;">
-        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <p id="twitterSuccessMsg" style="font-weight: 700;">Compte lié avec succès ! Le bot répondra à vos mentions.</p>
-
-        <!-- INTERFACE DE COMMANDES DU BOT X -->
-        <div id="twitterInstructions" style="margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px; text-align: left;">
-          <h4 style="color:#fff; font-size:13.5px; margin-bottom: 12px; font-weight: 700;">
-            💡 Commandes de détection pour le Robot :
-          </h4>
-          <p style="font-size:11.5px; color:var(--muted); margin-bottom: 16px; line-height: 1.5;">
-            Pour déclencher une détection, mentionnez <code style="font-size:9.5px;">@scantraceai</code> suivi obligatoirement de l'une des commandes de votre choix (en français ou en anglais) :
-          </p>
-          
-          <div style="display: flex; flex-direction: column; gap: 10px;">
-            <!-- Commande 1 : Photo -->
-            <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; display: flex; align-items: start; gap: 12px;">
-              <div style="font-size:18px; line-height:1; padding-top: 2px;">📷</div>
-              <div>
-                <div style="font-size:12px; font-weight:700; color:#fff; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                  <span>Analyse Photo</span>
-                  <span style="font-family:monospace; font-size:9px; color:var(--cyan); background:rgba(0,212,255,0.08); padding:1px 6px; border-radius:4px;">analyse photo</span>
-                  <span style="font-family:monospace; font-size:9px; color:var(--cyan); background:rgba(0,212,255,0.08); padding:1px 6px; border-radius:4px;">analyze photo</span>
-                </div>
-                <div style="font-size:11px; color:var(--muted); margin-top:5px; line-height:1.4;">Exemple : <code style="font-size:9.5px; color:rgba(255,255,255,0.5);">@scantraceai analyse photo</code> sous un post contenant une image.</div>
-              </div>
-            </div>
-            
-            <!-- Commande 2 : Vidéo -->
-            <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; display: flex; align-items: start; gap: 12px;">
-              <div style="font-size:18px; line-height:1; padding-top: 2px;">🎥</div>
-              <div>
-                <div style="font-size:12px; font-weight:700; color:#fff; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                  <span>Analyse Vidéo</span>
-                  <span style="font-family:monospace; font-size:9px; color:var(--cyan); background:rgba(0,212,255,0.08); padding:1px 6px; border-radius:4px;">analyse video</span>
-                  <span style="font-family:monospace; font-size:9px; color:var(--cyan); background:rgba(0,212,255,0.08); padding:1px 6px; border-radius:4px;">analyze video</span>
-                </div>
-                <div style="font-size:11px; color:var(--muted); margin-top:5px; line-height:1.4;">Exemple : <code style="font-size:9.5px; color:rgba(255,255,255,0.5);">@scantraceai analyse video</code> sous un post contenant une vidéo.</div>
-              </div>
-            </div>
-
-            <!-- Commande 3 : Texte -->
-            <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; display: flex; align-items: start; gap: 12px;">
-              <div style="font-size:18px; line-height:1; padding-top: 2px;">✍️</div>
-              <div>
-                <div style="font-size:12px; font-weight:700; color:#fff; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                  <span>Analyse Texte</span>
-                  <span style="font-family:monospace; font-size:9px; color:var(--cyan); background:rgba(0,212,255,0.08); padding:1px 6px; border-radius:4px;">analyse texte</span>
-                  <span style="font-family:monospace; font-size:9px; color:var(--cyan); background:rgba(0,212,255,0.08); padding:1px 6px; border-radius:4px;">analyze text</span>
-                </div>
-                <div style="font-size:11px; color:var(--muted); margin-top:5px; line-height:1.4;">Exemple : <code style="font-size:9.5px; color:rgba(255,255,255,0.5);">@scantraceai analyse texte</code> sous un tweet rédigé.</div>
-              </div>
-            </div>
-
-            <!-- Commande 4 : Post Complet -->
-            <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; display: flex; align-items: start; gap: 12px;">
-              <div style="font-size:18px; line-height:1; padding-top: 2px;">🛡️</div>
-              <div>
-                <div style="font-size:12px; font-weight:700; color:#fff; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                  <span>Post Complet</span>
-                  <span style="font-family:monospace; font-size:9px; color:var(--cyan); background:rgba(0,212,255,0.08); padding:1px 6px; border-radius:4px;">analyse post complet</span>
-                  <span style="font-family:monospace; font-size:9px; color:var(--cyan); background:rgba(0,212,255,0.08); padding:1px 6px; border-radius:4px;">analyze full post</span>
-                </div>
-                <div style="font-size:11px; color:var(--muted); margin-top:5px; line-height:1.4;">Exemple : <code style="font-size:9.5px; color:rgba(255,255,255,0.5);">@scantraceai analyse post complet</code> pour un diagnostic hybride complet.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 </section>
 
 <div class="rule"></div>
