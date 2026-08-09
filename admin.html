@@ -1,960 +1,216 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScanTrace — Command Center</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — ScanTrace</title>
+<style>
+  :root {
+    --ink: #04070F; --ink-soft: #0A0F1C; --ink-card: #0D1424; --paper: #E7ECF5; --paper-dim: #8CA0B8;
+    --accent: #00D4FF; --accent-soft: rgba(0,212,255,0.08); --line: rgba(255,255,255,0.08);
+    --danger: #F43F5E; --success: #10B981; --warning: #F59E0B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--ink); color: var(--paper);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 32px 20px 64px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+  .header h1 { font-size: 24px; font-weight: 800; margin: 0; }
+  .header .sub { font-size: 12px; color: var(--paper-dim); margin-top: 4px; }
+  .badge-live { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border: 1px solid rgba(0,212,255,0.25); padding: 4px 10px; border-radius: 999px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
-        :root {
-            --bg:       #03060D;
-            --bg-2:     #060B16;
-            --surface:  #08101E;
-            --surface-2:#0C1525;
-            --border:   rgba(255,255,255,0.07);
-            --border-hi:rgba(255,255,255,0.12);
-            --cyan:     #00D4FF;
-            --cyan-dim: rgba(0,212,255,0.12);
-            --cyan-glow:rgba(0,212,255,0.25);
-            --green:    #10B981;
-            --green-dim:rgba(16,185,129,0.12);
-            --yellow:   #F59E0B;
-            --yellow-dim:rgba(245,158,11,0.12);
-            --red:      #EF4444;
-            --red-dim:  rgba(239,68,68,0.12);
-            --purple:   #8B5CF6;
-            --text:     #B8CDE0;
-            --text-hi:  #E8F0F8;
-            --muted:    rgba(184,205,224,0.4);
-            --mono:     'JetBrains Mono', monospace;
-        }
+  .loading, .error, .denied { text-align: center; padding: 80px 20px; color: var(--paper-dim); }
+  .denied { color: var(--danger); }
 
-        html, body { height: 100%; }
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
-        }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .card {
+    background: linear-gradient(175deg, var(--ink-card), var(--ink-soft));
+    border: 1px solid var(--line); border-radius: 16px; padding: 18px;
+  }
+  .card .label { font-size: 10.5px; font-weight: 700; color: var(--paper-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .card .value { font-size: 26px; font-weight: 800; }
+  .card .value.success { color: var(--success); }
+  .card .value.accent { color: var(--accent); }
 
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.2); border-radius: 99px; }
+  .section { margin-bottom: 28px; }
+  .section h2 { font-size: 14px; font-weight: 700; margin: 0 0 12px; color: var(--paper); }
 
-        /* AMBIENT */
-        .ambient {
-            position: fixed; inset: 0; pointer-events: none; z-index: 0;
-            background:
-                radial-gradient(ellipse 800px 500px at 20% -10%, rgba(0,100,180,0.08) 0%, transparent 70%),
-                radial-gradient(ellipse 600px 400px at 80% 100%, rgba(0,212,255,0.04) 0%, transparent 70%);
-        }
+  .plan-bars { display: flex; flex-direction: column; gap: 10px; }
+  .plan-bar-row { display: flex; align-items: center; gap: 10px; }
+  .plan-bar-label { width: 90px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .plan-bar-track { flex: 1; height: 20px; background: rgba(255,255,255,0.03); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+  .plan-bar-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+  .plan-bar-count { width: 40px; text-align: right; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-        /* HEADER */
-        header {
-            position: sticky; top: 0; z-index: 100;
-            height: 56px;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 24px;
-            background: rgba(3,6,13,0.85);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-        }
-        header { height: 64px; }
-        .brand { display: flex; align-items: center; gap: 12px; }
-        .brand-mark {
-            position: relative; width: 34px; height: 34px; flex: none;
-            display: grid; place-items: center;
-            border-radius: 11px;
-            background: linear-gradient(150deg, rgba(0,212,255,0.22), rgba(139,92,246,0.14) 60%, transparent);
-            border: 1px solid rgba(0,212,255,0.28);
-            box-shadow: 0 0 0 1px rgba(3,6,13,0.6) inset, 0 6px 18px -8px var(--cyan-glow);
-        }
-        .brand-mark svg { width: 20px; height: 20px; display: block; }
-        .brand-mark::after {
-            content: ''; position: absolute; inset: -1px; border-radius: 12px;
-            background: conic-gradient(from 0deg, transparent 0 70%, var(--cyan-glow) 85%, transparent 100%);
-            animation: spin 4s linear infinite; opacity: 0.55; pointer-events: none;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .brand-txt { display: flex; flex-direction: column; line-height: 1.1; }
-        .brand-name {
-            font-weight: 800; font-size: 15px; letter-spacing: -0.4px; color: var(--text-hi);
-            display: flex; align-items: baseline; gap: 1px;
-        }
-        .brand-name b {
-            font-weight: 900;
-            background: linear-gradient(90deg, var(--cyan), #8B5CF6);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-        }
-        .brand-sub {
-            font-family: var(--mono); font-size: 9px; letter-spacing: 1.6px;
-            text-transform: uppercase; color: var(--muted); margin-top: 3px;
-        }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { text-align: left; padding: 8px 10px; color: var(--paper-dim); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--line); }
+  td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tr:last-child td { border-bottom: none; }
+  .table-wrap { background: var(--ink-card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .rank { color: var(--accent); font-weight: 800; }
+  .mono { font-family: ui-monospace, monospace; font-size: 11px; color: var(--paper-dim); }
 
-        .header-right { display: flex; align-items: center; gap: 16px; }
+  a.back { color: var(--paper-dim); font-size: 13px; text-decoration: none; }
+  a.back:hover { color: var(--accent); }
 
-        .live-pill {
-            display: flex; align-items: center; gap: 7px;
-            background: var(--green-dim);
-            border: 1px solid rgba(16,185,129,0.2);
-            padding: 5px 12px; border-radius: 99px;
-            font-size: 12px; font-weight: 700; color: var(--green); font-family: var(--mono);
-        }
-        .live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 1.6s infinite; }
-
-        .header-time {
-            font-family: var(--mono); font-size: 12px; color: var(--muted);
-        }
-
-        @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 6px currentColor;} 50%{opacity:0.4;box-shadow:none;} }
-
-        /* LAYOUT */
-        .page { max-width: 1440px; margin: 0 auto; padding: 28px 24px; position: relative; z-index: 1; }
-
-        /* SECTION HEADER */
-        .section-label {
-            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
-            color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
-        }
-        .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
-
-        /* KPI GRID */
-        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-        @media(max-width:900px){ .kpi-row{ grid-template-columns: repeat(2,1fr); } }
-        @media(max-width:500px){ .kpi-row{ grid-template-columns: 1fr; } }
-
-        .kpi {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-            transition: border-color 0.2s, transform 0.2s;
-        }
-        .kpi:hover { border-color: var(--border-hi); transform: translateY(-2px); }
-        .kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 16px 16px 0 0; }
-        .kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px; }
-        .kpi-value { font-size: 34px; font-weight: 900; color: var(--text-hi); letter-spacing: -1.5px; line-height: 1; margin-bottom: 8px; font-family: var(--mono); }
-        .kpi-sub { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
-        .badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px; font-family: var(--mono); }
-        .badge-up { background: var(--green-dim); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
-        .badge-down { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
-        .badge-neutral { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(0,212,255,0.2); }
-
-        /* MAIN GRID */
-        .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
-        @media(max-width:1100px){ .main-grid{ grid-template-columns: 1fr; } }
-
-        /* PANELS */
-        .panel {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 24px;
-        }
-        .panel-head {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .panel-title { font-size: 14px; font-weight: 700; color: var(--text-hi); }
-        .panel-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-        /* TAB CONTROLS */
-        .tabs { display: flex; gap: 4px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
-        .tab {
-            padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600;
-            cursor: pointer; color: var(--muted); border: none; background: none; transition: 0.15s;
-        }
-        .tab.active { background: var(--surface-2); color: var(--text-hi); border: 1px solid var(--border); }
-        .tab:hover:not(.active) { color: var(--text); }
-
-        /* CHART AREA */
-        .chart-wrap { position: relative; }
-
-        /* SIDEBAR */
-        .sidebar { display: flex; flex-direction: column; gap: 16px; }
-
-        /* LIVE FEED */
-        .feed-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
-
-        .feed-item {
-            background: var(--bg-2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px 12px;
-            font-size: 12px;
-            border-left: 2px solid transparent;
-            animation: slideIn 0.3s ease;
-            transition: border-color 0.2s;
-        }
-        .feed-item:hover { border-color: var(--border-hi); }
-        .feed-item.review { border-left-color: var(--yellow); }
-        .feed-item.bug     { border-left-color: var(--red); }
-        .feed-item.idee    { border-left-color: var(--cyan); }
-        .feed-item.amelioration { border-left-color: var(--green); }
-
-        .feed-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .feed-tag { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 2px 6px; border-radius: 4px; }
-        .feed-tag.review { background: var(--yellow-dim); color: var(--yellow); }
-        .feed-tag.bug     { background: var(--red-dim); color: var(--red); }
-        .feed-tag.idee    { background: var(--cyan-dim); color: var(--cyan); }
-        .feed-tag.amelioration { background: var(--green-dim); color: var(--green); }
-        .feed-time { font-size: 10px; color: var(--muted); font-family: var(--mono); }
-        .feed-text { color: var(--text); line-height: 1.4; }
-        .feed-author { font-weight: 600; color: var(--text-hi); }
-
-        /* MINI STATS for sidebar */
-        .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .mini-stat {
-            background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px;
-            padding: 14px; text-align: center;
-        }
-        .mini-stat-val { font-size: 22px; font-weight: 800; font-family: var(--mono); color: var(--text-hi); }
-        .mini-stat-lbl { font-size: 10px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-
-        /* DONUT CHART area */
-        .donut-wrap { position: relative; display: flex; justify-content: center; }
-        .donut-center {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            text-align: center; pointer-events: none;
-        }
-        .donut-center-val { font-size: 22px; font-weight: 900; color: var(--text-hi); font-family: var(--mono); }
-        .donut-center-lbl { font-size: 10px; color: var(--muted); }
-
-        /* FUNNEL BARS */
-        .funnel { display: flex; flex-direction: column; gap: 10px; }
-        .funnel-row { display: flex; flex-direction: column; gap: 5px; }
-        .funnel-label { display: flex; justify-content: space-between; font-size: 12px; }
-        .funnel-label span:first-child { color: var(--text); font-weight: 500; }
-        .funnel-label span:last-child { color: var(--text-hi); font-weight: 700; font-family: var(--mono); }
-        .funnel-bar-track { height: 6px; background: var(--bg-2); border-radius: 99px; overflow: hidden; }
-        .funnel-bar { height: 100%; border-radius: 99px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
-
-        /* EMPTY STATE */
-        .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
-        .empty-icon { font-size: 32px; margin-bottom: 10px; }
-
-        /* BOTTOM GRID */
-        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; align-items: start; }
-        @media(max-width:800px){ .bottom-grid{ grid-template-columns: 1fr; } }
-
-        /* POLISH */
-        .kpi { background: linear-gradient(165deg, var(--surface-2), var(--surface) 55%); box-shadow: 0 12px 30px -22px rgba(0,0,0,0.9); }
-        .kpi::after {
-            content:''; position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity .25s;
-            background: radial-gradient(420px 160px at 100% 0%, rgba(0,212,255,0.07), transparent 70%);
-        }
-        .kpi:hover::after { opacity:1; }
-        .kpi-value { font-variant-numeric: tabular-nums; }
-        .panel {
-            background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 42%);
-            box-shadow: 0 18px 46px -32px rgba(0,0,0,0.95);
-        }
-        .panel-title { letter-spacing: -0.2px; }
-        .tabs { gap: 2px; }
-        .tab.active {
-            background: linear-gradient(180deg, rgba(0,212,255,0.16), rgba(0,212,255,0.06));
-            border-color: rgba(0,212,255,0.28); color: var(--cyan);
-            box-shadow: 0 0 14px -4px var(--cyan-glow);
-        }
-        .funnel-bar-track { height: 8px; background: rgba(255,255,255,0.04); }
-        .funnel-bar { box-shadow: 0 0 12px -2px currentColor; }
-        .mini-stat { background: linear-gradient(165deg, var(--surface-2), var(--bg-2)); transition: border-color .2s, transform .2s; }
-        .mini-stat:hover { border-color: var(--border-hi); transform: translateY(-2px); }
-        .feed-item { background: linear-gradient(180deg, var(--surface-2), var(--bg-2)); }
-
-        /* === AESTHETIC PASS === */
-        body::before {
-            content:''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .35;
-            background-image: radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px);
-            background-size: 22px 22px;
-            mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 10%, transparent 75%);
-        }
-        .ambient {
-            background:
-                radial-gradient(ellipse 900px 520px at 18% -12%, rgba(0,150,255,0.13) 0%, transparent 70%),
-                radial-gradient(ellipse 700px 460px at 84% 8%, rgba(139,92,246,0.10) 0%, transparent 72%),
-                radial-gradient(ellipse 700px 420px at 60% 108%, rgba(0,212,255,0.07) 0%, transparent 70%);
-        }
-        header { border-bottom-color: rgba(255,255,255,0.06); }
-        header::after {
-            content:''; position:absolute; left:0; right:0; bottom:-1px; height:1px;
-            background: linear-gradient(90deg, transparent, rgba(0,212,255,0.35), rgba(139,92,246,0.25), transparent);
-        }
-        header { position: sticky; }
-
-        .panel { position: relative; overflow: hidden; }
-        .panel::before {
-            content:''; position:absolute; inset:0; pointer-events:none; border-radius: inherit;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
-        }
-        .kpi { border-radius: 18px; }
-        .kpi-value { text-shadow: 0 0 26px rgba(0,212,255,0.12); }
-
-        .tabs { border-radius: 12px; background: rgba(3,6,13,0.6); backdrop-filter: blur(6px); }
-        .tab { border-radius: 9px; letter-spacing: .1px; }
-
-        /* chart shell */
-        .chart-wrap {
-            border-radius: 16px;
-            padding: 8px 4px 0;
-            background:
-                linear-gradient(180deg, rgba(0,212,255,0.045), rgba(0,212,255,0) 55%),
-                rgba(3,6,13,0.35);
-            border: 1px solid rgba(255,255,255,0.045);
-        }
-        .chart-legend { display:flex; gap:14px; align-items:center; margin: -6px 0 12px; }
-        .lg-chip {
-            display:inline-flex; align-items:center; gap:7px;
-            font-size: 11px; font-weight: 600; color: var(--muted);
-            font-family: var(--mono); letter-spacing: .3px;
-        }
-        .lg-line { width: 16px; height: 3px; border-radius: 99px; display:inline-block; }
-        .lg-line.cyan { background: linear-gradient(90deg,#22E0FF,#8B5CF6); box-shadow: 0 0 10px rgba(0,212,255,.6); }
-        .lg-line.amber { background: #F59E0B; box-shadow: 0 0 10px rgba(245,158,11,.5); }
-
-        .feed-item { border-radius: 12px; }
-        .section-label::after { background: linear-gradient(90deg, var(--border), transparent); }
-
-        @keyframes slideIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:none;} }
-        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-    </style>
+  #loginBox { max-width: 380px; margin: 60px auto; text-align: center; }
+  #loginBox input {
+    width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line);
+    background: rgba(255,255,255,0.03); color: var(--paper); font-size: 14px; margin-bottom: 10px;
+  }
+  #loginBox button {
+    width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--accent); color: var(--ink);
+    font-weight: 700; cursor: pointer;
+  }
+</style>
 </head>
 <body>
-<div class="ambient"></div>
 
-<!-- HEADER -->
-<header>
-    <div class="brand">
-        <div class="brand-mark">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <defs>
-                    <linearGradient id="lg" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-                        <stop stop-color="#00D4FF"/><stop offset="1" stop-color="#8B5CF6"/>
-                    </linearGradient>
-                </defs>
-                <circle cx="10.5" cy="10.5" r="6.6" stroke="url(#lg)" stroke-width="1.8"/>
-                <path d="M15.4 15.4L21 21" stroke="url(#lg)" stroke-width="2.1" stroke-linecap="round"/>
-                <path d="M5.6 11.4l2.2-2.6 2 3.2 2.1-4.2 1.7 3.6" stroke="#E8F0F8" stroke-width="1.5"
-                      stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
-            </svg>
-        </div>
-        <div class="brand-txt">
-            <div class="brand-name">ScanTrace<b>.PRO</b></div>
-            <div class="brand-sub">Command Center</div>
-        </div>
+<div class="wrap">
+  <a href="index.html" class="back">&larr; Retour au site</a>
+
+  <div class="header" style="margin-top: 16px;">
+    <div>
+      <h1>Panneau d'administration</h1>
+      <div class="sub">ScanTrace — vue d'ensemble en direct</div>
     </div>
-    <div class="header-right">
-        <div class="header-time" id="clock">--:--:--</div>
-        <div class="live-pill">
-            <div class="live-dot"></div>
-            <span id="valLive">0</span> en ligne
-        </div>
+    <div class="badge-live"><span class="dot"></span> DONNÉES EN DIRECT</div>
+  </div>
+
+  <div id="content">
+    <div id="loginBox">
+      <p style="color: var(--paper-dim); margin-bottom: 16px;">Connecte-toi avec ton compte admin pour accéder au panneau.</p>
+      <input type="email" id="email" placeholder="Adresse e-mail" />
+      <input type="password" id="password" placeholder="Mot de passe" />
+      <button id="loginBtn">Se connecter</button>
+      <p id="loginError" style="color: var(--danger); font-size: 12px; margin-top: 10px;"></p>
     </div>
-</header>
-
-<!-- PAGE -->
-<div class="page">
-
-    <!-- KPI ROW -->
-    <div class="section-label">Vue d'ensemble</div>
-    <div class="kpi-row">
-        <div class="kpi">
-            <div class="kpi-accent" style="background:linear-gradient(90deg,var(--cyan),transparent)"></div>
-            <div class="kpi-label">Visites totales</div>
-            <div class="kpi-value" id="valTotalVisits">—</div>
-            <div class="kpi-sub">
-                <span class="badge badge-neutral" id="dailyTrendBadge">+0%</span>
-                <span id="dailyTrendLabel">vs hier</span>
-            </div>
-        </div>
-        <div class="kpi">
-            <div class="kpi-accent" style="background:linear-gradient(90deg,var(--yellow),transparent)"></div>
-            <div class="kpi-label">Téléchargements</div>
-            <div class="kpi-value" style="color:var(--yellow)" id="valTotalDL">—</div>
-            <div class="kpi-sub">
-                <span class="badge badge-neutral" id="convBadge">0%</span>
-                <span>taux de conversion</span>
-            </div>
-        </div>
-        <div class="kpi">
-            <div class="kpi-accent" style="background:linear-gradient(90deg,var(--green),transparent)"></div>
-            <div class="kpi-label">Score moyen</div>
-            <div class="kpi-value" style="color:var(--green)" id="valAvgRating">—</div>
-            <div class="kpi-sub" id="reviewCountSub">0 avis reçus</div>
-        </div>
-        <div class="kpi">
-            <div class="kpi-accent" style="background:linear-gradient(90deg,var(--purple),transparent)"></div>
-            <div class="kpi-label">Suggestions</div>
-            <div class="kpi-value" style="color:var(--purple)" id="valTotalSugs">—</div>
-            <div class="kpi-sub" id="sugBreakdown">— idées · — bugs</div>
-        </div>
-    </div>
-
-    <!-- MAIN GRID -->
-    <div class="main-grid">
-
-        <!-- LEFT COLUMN -->
-        <div style="display:flex;flex-direction:column;gap:20px;">
-
-            <!-- ACTIVITY CHART -->
-            <div class="panel">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-title">Flux d'activité</div>
-                        <div class="panel-sub" id="chartSub">Visites & téléchargements heure par heure</div>
-                    </div>
-                    <div class="tabs" id="rangeTabGroup">
-                        <button class="tab active" data-v="today">Aujourd'hui</button>
-                        <button class="tab" data-v="2">Hier</button>
-                        <button class="tab" data-v="7">7j</button>
-                        <button class="tab" data-v="30">30j</button>
-                        <button class="tab" data-v="90">3m</button>
-                        <button class="tab" data-v="365">1an</button>
-                    </div>
-                </div>
-                <div class="chart-legend">
-                    <span class="lg-chip"><i class="lg-line cyan"></i>Visites</span>
-                    <span class="lg-chip"><i class="lg-line amber"></i>Téléchargements</span>
-                </div>
-                <div class="chart-wrap">
-                    <canvas id="mainChart" height="120"></canvas>
-                </div>
-            </div>
-
-            <!-- BOTTOM ROW -->
-            <div class="bottom-grid">
-
-                <!-- FUNNEL -->
-                <div class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <div class="panel-title">Entonnoir</div>
-                            <div class="panel-sub">De la visite à l'action</div>
-                        </div>
-                    </div>
-                    <div class="funnel" id="funnelEl">
-                        <div class="funnel-row">
-                            <div class="funnel-label"><span>Visiteurs</span><span id="fv">0</span></div>
-                            <div class="funnel-bar-track"><div class="funnel-bar" id="fb1" style="width:100%;background:var(--cyan)"></div></div>
-                        </div>
-                        <div class="funnel-row">
-                            <div class="funnel-label"><span>Téléchargements</span><span id="fd">0</span></div>
-                            <div class="funnel-bar-track"><div class="funnel-bar" id="fb2" style="width:0%;background:var(--yellow)"></div></div>
-                        </div>
-                        <div class="funnel-row">
-                            <div class="funnel-label"><span>Avis laissés</span><span id="fr">0</span></div>
-                            <div class="funnel-bar-track"><div class="funnel-bar" id="fb3" style="width:0%;background:var(--green)"></div></div>
-                        </div>
-                        <div class="funnel-row">
-                            <div class="funnel-label"><span>Suggestions</span><span id="fs">0</span></div>
-                            <div class="funnel-bar-track"><div class="funnel-bar" id="fb4" style="width:0%;background:var(--purple)"></div></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SUGGESTIONS PIE -->
-                <div class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <div class="panel-title">Types de retours</div>
-                            <div class="panel-sub">Répartition des suggestions</div>
-                        </div>
-                    </div>
-                    <div class="donut-wrap">
-                        <canvas id="typeChart" height="160" style="max-width:200px"></canvas>
-                        <div class="donut-center">
-                            <div class="donut-center-val" id="totalSugDonut">0</div>
-                            <div class="donut-center-lbl">total</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SIDEBAR -->
-        <div class="sidebar">
-
-            <!-- LIVE FEED -->
-            <div class="panel" style="flex:1">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-title">Flux live</div>
-                        <div class="panel-sub">Derniers retours reçus</div>
-                    </div>
-                    <div class="live-pill" style="font-size:10px;padding:3px 9px;">
-                        <div class="live-dot" style="width:5px;height:5px;"></div> LIVE
-                    </div>
-                </div>
-                <div class="feed-list" id="liveFeed">
-                    <div class="empty"><div class="empty-icon">📭</div>Chargement du flux…</div>
-                </div>
-            </div>
-
-            <!-- ENGAGEMENT MINI STATS -->
-            <div class="panel">
-                <div class="panel-head" style="margin-bottom:14px">
-                    <div class="panel-title">Engagement</div>
-                </div>
-                <div class="mini-stats">
-                    <div class="mini-stat">
-                        <div class="mini-stat-val" id="msVisits">—</div>
-                        <div class="mini-stat-lbl">Visites</div>
-                    </div>
-                    <div class="mini-stat">
-                        <div class="mini-stat-val" style="color:var(--yellow)" id="msDL">—</div>
-                        <div class="mini-stat-lbl">DL</div>
-                    </div>
-                    <div class="mini-stat">
-                        <div class="mini-stat-val" style="color:var(--green)" id="msRating">—</div>
-                        <div class="mini-stat-lbl">Score</div>
-                    </div>
-                    <div class="mini-stat">
-                        <div class="mini-stat-val" style="color:var(--purple)" id="msSugs">—</div>
-                        <div class="mini-stat-lbl">Suggs</div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
+  </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script>
-// === FIREBASE ===
-const firebaseConfig = {
-    apiKey: "AIzaSyBkFOHdx41k6m3xK6qOKQo3z08v35g6OhA",
+  const firebaseConfig = {
+    apiKey: "AIzaSyBkFOHdx41k6m3xK6qOKQo3zO8v35g6OhA",
     authDomain: "scantrace-site.firebaseapp.com",
     projectId: "scantrace-site",
     storageBucket: "scantrace-site.firebasestorage.app",
     messagingSenderId: "570254848893",
-    appId: "1:570254848893:web:693472ee28969bfc041214"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    appId: "1:570254848893:web:693472ee28969bfc041214",
+    measurementId: "G-T03DEJQNLL",
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const PROXY_URL = "https://scantrace-proxy-cnh7.vercel.app";
+  const content = document.getElementById('content');
 
-// === CLOCK ===
-function updateClock() {
-    document.getElementById('clock').textContent = new Date().toLocaleTimeString('fr-FR');
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-function localDateId(date = new Date()) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-// === STATE ===
-let state = { visits: 0, downloads: 0, reviews: [], suggestions: [], daily: [] };
-
-// === CHARTS ===
-const mainCtx = document.getElementById('mainChart').getContext('2d');
-const mainChart = new Chart(mainCtx, {
-    type: 'line',
-    data: {
-        labels: [],
-        datasets: [
-            {
-                label: 'Visites',
-                data: [],
-                borderColor: (ctx) => {
-                    const {chartArea} = ctx.chart;
-                    if (!chartArea) return '#00D4FF';
-                    const g = ctx.chart.ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
-                    g.addColorStop(0, '#22E0FF'); g.addColorStop(0.55, '#00D4FF'); g.addColorStop(1, '#8B5CF6');
-                    return g;
-                },
-                backgroundColor: (ctx) => {
-                    const {chartArea} = ctx.chart;
-                    if (!chartArea) return 'rgba(0,212,255,0.15)';
-                    const g = ctx.chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                    g.addColorStop(0, 'rgba(0,212,255,0.30)');
-                    g.addColorStop(0.45, 'rgba(0,212,255,0.10)');
-                    g.addColorStop(1, 'rgba(0,212,255,0)');
-                    return g;
-                },
-                fill: true,
-                cubicInterpolationMode: 'monotone',
-                tension: 0.35,
-                pointRadius: 0,              // <--- MODIFICATION : Point par défaut à 0
-                pointHoverRadius: 5,         // <--- MODIFICATION : Point s'affiche au survol
-                pointHoverBorderWidth: 3,
-                pointHoverBorderColor: 'rgba(0,212,255,0.25)',
-                pointBackgroundColor: '#00D4FF',
-                pointHitRadius: 30,          // <--- MODIFICATION : Zone de détection large
-                borderWidth: 2.6,
-                borderCapStyle: 'round',
-                borderJoinStyle: 'round',
-            },
-            {
-                label: 'Téléchargements',
-                data: [],
-                borderColor: '#F59E0B',
-                backgroundColor: (ctx) => {
-                    const {chartArea} = ctx.chart;
-                    if (!chartArea) return 'transparent';
-                    const g = ctx.chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                    g.addColorStop(0, 'rgba(245,158,11,0.16)');
-                    g.addColorStop(1, 'rgba(245,158,11,0)');
-                    return g;
-                },
-                fill: true,
-                cubicInterpolationMode: 'monotone',
-                tension: 0.35,
-                pointRadius: 0,              // <--- MODIFICATION : Point par défaut à 0
-                pointHoverRadius: 5,         // <--- MODIFICATION : Point s'affiche au survol
-                pointHoverBorderWidth: 3,
-                pointHoverBorderColor: 'rgba(245,158,11,0.25)',
-                pointBackgroundColor: '#F59E0B',
-                pointHitRadius: 30,          // <--- MODIFICATION : Zone de détection large
-                borderWidth: 2,
-                borderCapStyle: 'round',
-            }
-        ]
-    },
-    plugins: [{
-        id: 'crosshair',
-        afterDatasetsDraw(chart) {
-            const active = chart.tooltip?.getActiveElements?.() || [];
-            if (!active.length) return;
-            const x = active[0].element.x;
-            const {top, bottom} = chart.chartArea;
-            const c = chart.ctx;
-            c.save();
-            c.beginPath(); c.moveTo(x, top); c.lineTo(x, bottom);
-            c.lineWidth = 1; c.setLineDash([3, 4]);
-            c.strokeStyle = 'rgba(0,212,255,0.35)'; c.stroke();
-            c.restore();
-        }
-    }, {
-        id: 'lineGlow',
-        beforeDatasetDraw(chart, args) {
-            const c = chart.ctx;
-            c.save();
-            c.shadowColor = args.index === 0 ? 'rgba(0,212,255,0.55)' : 'rgba(245,158,11,0.35)';
-            c.shadowBlur = args.index === 0 ? 18 : 10;
-            c.shadowOffsetY = 4;
-        },
-        afterDatasetDraw(chart) { chart.ctx.restore(); }
-    }],
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 2.7,
-        animation: { duration: 700, easing: 'easeOutQuart' },
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: 'rgba(8,16,30,0.94)',
-                borderColor: 'rgba(0,212,255,0.22)',
-                borderWidth: 1,
-                padding: 12,
-                cornerRadius: 12,
-                displayColors: true,
-                usePointStyle: true,
-                boxPadding: 6,
-                titleFont: { family: "'JetBrains Mono'", size: 11, weight: '600' },
-                bodyFont: { family: "'Inter'", size: 12, weight: '600' },
-                titleColor: '#E8F0F8',
-                bodyColor: '#B8CDE0',
-                callbacks: {
-                    title: items => currentRange === 'today' ? `Aujourd'hui · ${items[0].label}` : items[0].label,
-                    label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}`
-                }
-            }
-        },
-        scales: {
-            y: {
-                grid: { color: 'rgba(255,255,255,0.045)', drawTicks: false },
-                ticks: { color: '#4A6080', font: { family: "'JetBrains Mono'", size: 10 }, maxTicksLimit: 5, padding: 10 },
-                border: { display: false }
-            },
-            x: {
-                grid: { display: false },
-                border: { color: 'rgba(255,255,255,0.06)' },
-                ticks: { color: '#4A6080', font: { family: "'JetBrains Mono'", size: 10 }, maxTicksLimit: 8, padding: 8, maxRotation: 0, autoSkip: true }
-            }
-        }
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errEl = document.getElementById('loginError');
+    errEl.textContent = '';
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+    } catch (e) {
+      errEl.textContent = "Identifiants incorrects.";
     }
-});
+  });
 
-const typeChart = new Chart(document.getElementById('typeChart'), {
-    type: 'doughnut',
-    data: {
-        labels: ['Idées', 'Bugs', 'Amélios'],
-        datasets: [{
-            data: [1, 1, 1],
-            backgroundColor: ['#00D4FF', '#EF4444', '#10B981'],
-            borderWidth: 0,
-            hoverOffset: 6,
-        }]
-    },
-    options: {
-        cutout: '72%',
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { color: '#B8CDE0', boxWidth: 8, boxHeight: 8, padding: 12, font: { size: 11 } }
-            },
-            tooltip: {
-                backgroundColor: '#0C1525',
-                borderColor: 'rgba(255,255,255,0.1)',
-                borderWidth: 1,
-                titleColor: '#E8F0F8',
-                bodyColor: '#B8CDE0',
-            }
-        }
-    }
-});
+  function planColor(plan) {
+    return { free: '#8CA0B8', starter: '#00D4FF', growth: '#38BDF8', premium: '#A78BFA', admin: '#10B981' }[plan] || '#8CA0B8';
+  }
+  function planLabel(plan) {
+    return { free: 'Gratuit', starter: 'Starter', growth: 'Growth', premium: 'Premium', admin: 'Admin' }[plan] || plan;
+  }
+  function fmtDate(iso) {
+    try { return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+    catch (e) { return iso; }
+  }
 
-// === RANGE TABS ===
-let currentRange = 'today';
-document.querySelectorAll('#rangeTabGroup .tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.querySelectorAll('#rangeTabGroup .tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentRange = tab.dataset.v === 'today' ? 'today' : parseInt(tab.dataset.v);
-        updateChart();
-    });
-});
+  async function loadDashboard(user) {
+    content.innerHTML = '<div class="loading">Chargement des donn\u00e9es\u2026</div>';
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch(`${PROXY_URL}/api/admin-stats`, { headers: { Authorization: `Bearer ${idToken}` } });
+      const data = await res.json();
 
-// Doc du jour. Le rapprochement avec visits/downloads garantit que la courbe
-// reflète aussi les visites enregistrées avant l'activation du suivi à la minute.
-function todayDoc() {
-    const id = localDateId();
-    return state.daily.find(d => d.date === id || d.id === id) || { id, date: id, visits: 0, downloads: 0 };
-}
-
-function minuteValue(doc, prefix, minute) {
-    const hour = String(Math.floor(minute / 60)).padStart(2, '0');
-    const min = String(minute % 60).padStart(2, '0');
-    return Number(doc[prefix + hour + min] || 0);
-}
-
-function updateChart() {
-    const sub = document.getElementById('chartSub');
-
-    if (currentRange === 'today') {
-        const d = todayDoc();
-        const now = new Date();
-        const currentMinute = now.getHours() * 60 + now.getMinutes();
-        const bucketSize = 10;
-        const currentBucket = Math.floor(currentMinute / bucketSize);
-        const bucketCount = 144; // 24 h × 6 tranches de 10 minutes
-        const labels = [];
-        const visitBuckets = Array(bucketCount).fill(0);
-        const downloadBuckets = Array(bucketCount).fill(0);
-        const keys = Object.keys(d);
-        const hasVisitMinutes = keys.some(key => /^vm\d{4}$/.test(key));
-        const hasDownloadMinutes = keys.some(key => /^dm\d{4}$/.test(key));
-
-        for (let bucket = 0; bucket < bucketCount; bucket++) {
-            const start = bucket * bucketSize;
-            const hour = String(Math.floor(start / 60)).padStart(2, '0');
-            const minute = String(start % 60).padStart(2, '0');
-            labels.push(`${hour}h${minute}`);
-
-            if (hasVisitMinutes) {
-                for (let m = start; m < start + bucketSize; m++) visitBuckets[bucket] += minuteValue(d, 'vm', m);
-            } else if (minute === '00') {
-                visitBuckets[bucket] = Number(d['hv' + hour] || 0);
-            }
-
-            if (hasDownloadMinutes) {
-                for (let m = start; m < start + bucketSize; m++) downloadBuckets[bucket] += minuteValue(d, 'dm', m);
-            } else if (minute === '00') {
-                downloadBuckets[bucket] = Number(d['hd' + hour] || 0);
-            }
-        }
-        labels.push('24h00');
-
-        // Les anciens trackers ne stockaient que le total journalier. On place la
-        // différence dans la tranche actuelle afin que le compteur et la courbe
-        // ne puissent plus se contredire, sans inventer une heure historique.
-        const missingVisits = Math.max(0, Number(d.visits || 0) - visitBuckets.reduce((a, b) => a + b, 0));
-        const missingDownloads = Math.max(0, Number(d.downloads || 0) - downloadBuckets.reduce((a, b) => a + b, 0));
-        visitBuckets[currentBucket] += missingVisits;
-        downloadBuckets[currentBucket] += missingDownloads;
-
-        let visitTotal = 0;
-        let downloadTotal = 0;
-        const visits = visitBuckets.map((value, index) => index <= currentBucket ? (visitTotal += value) : null);
-        const dls = downloadBuckets.map((value, index) => index <= currentBucket ? (downloadTotal += value) : null);
-        visits.push(null);
-        dls.push(null);
-
-        mainChart.data.labels = labels;
-        mainChart.data.datasets[0].data = visits;
-        mainChart.data.datasets[1].data = dls;
-        mainChart.data.datasets[0].spanGaps = false;
-        mainChart.data.datasets[1].spanGaps = false;
-        mainChart.options.scales.x.ticks.maxTicksLimit = 13;
-        mainChart.options.scales.y.beginAtZero = true;
-        if (sub) sub.textContent = "Progression cumulée en direct · axe complet de 00h à 24h";
-    } else {
-        const filtered = [...state.daily].slice(0, currentRange).reverse();
-        mainChart.data.labels = filtered.map(d => d.date.split('-').slice(1).reverse().join('/'));
-        mainChart.data.datasets[0].data = filtered.map(d => d.visits || 0);
-        mainChart.data.datasets[1].data = filtered.map(d => d.downloads || 0);
-        mainChart.options.scales.x.ticks.maxTicksLimit = 8;
-        if (sub) sub.textContent = `Visites & téléchargements · ${currentRange} derniers jours`;
-    }
-    mainChart.update('active');
-}
-
-// Fait avancer l'axe jusqu'à la minute courante même sans nouvelle visite.
-setInterval(() => {
-    if (currentRange === 'today') updateChart();
-}, 60000);
-
-// === UPDATE UI ===
-function updateKPIs() {
-    const { visits, downloads, reviews, suggestions } = state;
-
-    // Main KPIs
-    document.getElementById('valTotalVisits').textContent = visits.toLocaleString('fr-FR');
-    document.getElementById('valTotalDL').textContent = downloads.toLocaleString('fr-FR');
-    document.getElementById('msVisits').textContent = visits.toLocaleString('fr-FR');
-    document.getElementById('msDL').textContent = downloads.toLocaleString('fr-FR');
-
-    // Conversion
-    const convRate = visits > 0 ? ((downloads / visits) * 100).toFixed(1) : 0;
-    document.getElementById('convBadge').textContent = `${convRate}%`;
-
-    // Reviews
-    const reviewCount = reviews.length;
-    if (reviewCount > 0) {
-        const avg = (reviews.reduce((a, b) => a + (b.rating || 0), 0) / reviewCount).toFixed(1);
-        document.getElementById('valAvgRating').textContent = avg;
-        document.getElementById('msRating').textContent = avg;
-        document.getElementById('reviewCountSub').textContent = `${reviewCount} avis reçus`;
-        document.getElementById('fr').textContent = reviewCount;
-    }
-
-    // Suggestions
-    const bugs = suggestions.filter(d => d.category === 'bug').length;
-    const ideas = suggestions.filter(d => d.category === 'idee').length;
-    const amels = suggestions.filter(d => d.category === 'amelioration').length;
-    const totalSugs = suggestions.length;
-
-    document.getElementById('valTotalSugs').textContent = totalSugs.toLocaleString('fr-FR');
-    document.getElementById('msSugs').textContent = totalSugs;
-    document.getElementById('sugBreakdown').textContent = `${ideas} idées · ${bugs} bugs`;
-    document.getElementById('totalSugDonut').textContent = totalSugs;
-    document.getElementById('fs').textContent = totalSugs;
-
-    typeChart.data.datasets[0].data = [ideas || 0, bugs || 0, amels || 0];
-    typeChart.update();
-
-    // Funnel bars
-    document.getElementById('fv').textContent = visits;
-    document.getElementById('fd').textContent = downloads;
-    setTimeout(() => {
-        document.getElementById('fb2').style.width = visits > 0 ? `${Math.min(100,(downloads/visits)*100)}%` : '0%';
-        document.getElementById('fb3').style.width = visits > 0 ? `${Math.min(100,(reviewCount/visits)*100)}%` : '0%';
-        document.getElementById('fb4').style.width = visits > 0 ? `${Math.min(100,(totalSugs/visits)*100)}%` : '0%';
-    }, 200);
-
-    // Trend
-    if (state.daily.length >= 2) {
-        const today = state.daily[0].visits || 0;
-        const yest = state.daily[1].visits || 0;
-        const diff = yest > 0 ? (((today - yest) / yest) * 100).toFixed(0) : 0;
-        const badge = document.getElementById('dailyTrendBadge');
-        badge.textContent = `${diff > 0 ? '+' : ''}${diff}%`;
-        badge.className = 'badge ' + (diff >= 0 ? 'badge-up' : 'badge-down');
-    }
-}
-
-function updateFeed() {
-    const items = [];
-    state.reviews.slice(0, 6).forEach(r => items.push({ type: 'review', ...r }));
-    state.suggestions.slice(0, 6).forEach(s => items.push({ type: s.category, ...s }));
-    items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-    const top = items.slice(0, 10);
-
-    const feedEl = document.getElementById('liveFeed');
-    if (top.length === 0) {
-        feedEl.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Aucun retour pour l\'instant</div>';
+      if (res.status === 403) {
+        content.innerHTML = `<div class="denied">Acc\u00e8s refus\u00e9 \u2014 ce compte (${user.email}) n'est pas administrateur.</div>`;
         return;
+      }
+      if (!res.ok) {
+        content.innerHTML = `<div class="error">Erreur : ${data.error || 'inconnue'}</div>`;
+        return;
+      }
+
+      const maxPlanCount = Math.max(1, ...Object.values(data.planCounts));
+
+      content.innerHTML = `
+        <div class="grid">
+          <div class="card"><div class="label">Utilisateurs totaux</div><div class="value">${data.totalUsers}</div></div>
+          <div class="card"><div class="label">Revenu mensuel estim\u00e9</div><div class="value success">${data.mrr.toFixed(2)}&euro;</div></div>
+          <div class="card"><div class="label">Tokens utilis\u00e9s ce mois</div><div class="value accent">${data.tokensUsedThisMonth}</div></div>
+          <div class="card"><div class="label">Comptes actifs ce mois</div><div class="value">${data.activeUsersThisMonth}</div></div>
+          <div class="card"><div class="label">Parrainages r\u00e9ussis</div><div class="value">${data.totalReferrals}</div></div>
+          <div class="card"><div class="label">Tokens bonus distribu\u00e9s</div><div class="value">${data.totalBonusTokens}</div></div>
+        </div>
+
+        <div class="section">
+          <h2>R\u00e9partition par plan</h2>
+          <div class="plan-bars">
+            ${Object.entries(data.planCounts).map(([plan, count]) => `
+              <div class="plan-bar-row">
+                <div class="plan-bar-label" style="color:${planColor(plan)}">${planLabel(plan)}</div>
+                <div class="plan-bar-track"><div class="plan-bar-fill" style="width:${(count / maxPlanCount) * 100}%; background:${planColor(plan)};"></div></div>
+                <div class="plan-bar-count">${count}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Top parrains</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>UID</th><th>Amis parrain\u00e9s</th><th>Tokens bonus</th></tr></thead>
+              <tbody>
+                ${data.topReferrers.length ? data.topReferrers.map((r, i) => `
+                  <tr><td class="rank">${i + 1}</td><td class="mono">${r.uid.slice(0, 12)}\u2026</td><td>${r.referralCount}</td><td>+${r.bonusTokens}</td></tr>
+                `).join('') : '<tr><td colspan="4" style="text-align:center; color: var(--paper-dim);">Aucun parrainage pour le moment</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Inscriptions r\u00e9centes</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>E-mail</th><th>Date</th></tr></thead>
+              <tbody>
+                ${data.recentSignups.map((u) => `
+                  <tr><td>${u.email || '(sans e-mail)'}</td><td class="mono">${fmtDate(u.createdAt)}</td></tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    } catch (e) {
+      content.innerHTML = `<div class="error">Erreur de connexion \u00e0 l'API.</div>`;
     }
+  }
 
-    feedEl.innerHTML = top.map(item => {
-        const typeMap = { review: 'Avis', bug: 'Bug', idee: 'Idée', amelioration: 'Amélio' };
-        const tag = typeMap[item.type] || item.type;
-        const author = item.type === 'review' ? `<span class="feed-author">${item.name || 'Anonyme'}</span> · ${item.rating}/5 ⭐` : '';
-        const text = (item.text || '').substring(0, 90) + ((item.text || '').length > 90 ? '…' : '');
-        const time = item.createdAt?.seconds ? timeAgo(item.createdAt.seconds * 1000) : 'Récemment';
-        return `
-            <div class="feed-item ${item.type}">
-                <div class="feed-meta">
-                    <span class="feed-tag ${item.type}">${tag}</span>
-                    <span class="feed-time">${time}</span>
-                </div>
-                ${author ? `<div style="font-size:11px;margin-bottom:4px;">${author}</div>` : ''}
-                <div class="feed-text">${text}</div>
-            </div>`;
-    }).join('');
-}
-
-function timeAgo(ms) {
-    const diff = Date.now() - ms;
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'À l\'instant';
-    if (mins < 60) return `il y a ${mins}min`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `il y a ${hrs}h`;
-    return `il y a ${Math.floor(hrs / 24)}j`;
-}
-
-// === FIREBASE LISTENERS ===
-db.collection('admin_stats').doc('global').onSnapshot(doc => {
-    if (doc.exists) {
-        const d = doc.data();
-        state.visits = d.totalVisits || 0;
-        state.downloads = d.totalDownloads || 0;
-        updateKPIs();
-    }
-});
-
-db.collection('reviews').orderBy('createdAt', 'desc').onSnapshot(snap => {
-    state.reviews = snap.docs.map(d => d.data());
-    updateKPIs();
-    updateFeed();
-});
-
-db.collection('suggestions').orderBy('createdAt', 'desc').onSnapshot(snap => {
-    state.suggestions = snap.docs.map(d => d.data());
-    updateKPIs();
-    updateFeed();
-});
-
-db.collection('admin_stats').doc('daily').collection('days')
-    .orderBy('date', 'desc').limit(365).onSnapshot(snap => {
-        state.daily = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        updateChart();
-        updateKPIs();
-    });
-
-db.collection('presence').onSnapshot(snap => {
-    let count = 0;
-    const now = Date.now();
-    snap.forEach(doc => { if (now - (doc.data().lastSeen || 0) < 50000) count++; });
-    document.getElementById('valLive').textContent = count;
-});
+  auth.onAuthStateChanged((user) => {
+    if (user) loadDashboard(user);
+  });
 </script>
 </body>
 </html>

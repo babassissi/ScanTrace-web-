@@ -140,6 +140,7 @@
   // Sans ce paramètre, on considère que l'utilisateur vient du site.
   const params = new URLSearchParams(window.location.search);
   const cameFromApp = params.get('redirect') === 'app';
+  const referralCode = params.get('ref');
 
   const viewLogin = document.getElementById('viewLogin');
   const viewSignup = document.getElementById('viewSignup');
@@ -213,6 +214,11 @@
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
       const result = await auth.signInWithPopup(provider);
+      // Le parrainage ne s'applique qu'à la CRÉATION du compte, jamais à une
+      // reconnexion sur un compte Google existant.
+      if (result.additionalUserInfo?.isNewUser) {
+        await redeemReferralIfAny(result.user);
+      }
       await returnAfterAuth(result.user);
     } catch (e) {
       showLoginError(firebaseErrorText(e));
@@ -232,6 +238,23 @@
     }
   });
 
+  const PROXY_URL = "https://scantrace-proxy-cnh7.vercel.app";
+
+  // Active un code de parrainage — appelé uniquement à la CRÉATION d'un
+  // compte (pas à la connexion), jamais bloquant : un échec ici (code
+  // invalide, déjà utilisé) n'empêche pas la création du compte.
+  async function redeemReferralIfAny(user) {
+    if (!referralCode) return;
+    try {
+      const idToken = await user.getIdToken();
+      await fetch(`${PROXY_URL}/api/redeem-referral`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ code: referralCode }),
+      });
+    } catch (e) { /* silencieux — un parrainage raté ne doit jamais bloquer l'inscription */ }
+  }
+
   document.getElementById('createAccountBtn').addEventListener('click', async () => {
     showSignupError('');
     const email = document.getElementById('signupEmail').value.trim();
@@ -240,6 +263,7 @@
     if (!email || !password) { showSignupError('Renseigne un e-mail et un mot de passe (6 caractères min.).'); return; }
     try {
       const result = await auth.createUserWithEmailAndPassword(email, password);
+      await redeemReferralIfAny(result.user);
       await returnAfterAuth(result.user);
     } catch (e) {
       showSignupError(firebaseErrorText(e));
