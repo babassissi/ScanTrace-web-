@@ -6,51 +6,119 @@
 <title>Tarifs — ScanTrace</title>
 <style>
   :root {
-    --ink: #04070F; --ink-soft: #0A0F1C; --paper: #E7ECF5; --paper-dim: #8CA0B8;
-    --accent: #00D4FF; --line: rgba(255,255,255,0.1); --danger: #F43F5E; --success: #10B981;
+    --ink: #04070F; --ink-soft: #0A0F1C; --ink-card: #0D1424; --paper: #E7ECF5; --paper-dim: #8CA0B8;
+    --accent: #00D4FF; --accent-soft: rgba(0,212,255,0.08); --line: rgba(255,255,255,0.08);
+    --danger: #F43F5E; --success: #10B981;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; min-height: 100vh; background: var(--ink); color: var(--paper);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 48px 20px 64px;
+    background-image:
+      radial-gradient(ellipse 700px 400px at 50% -10%, rgba(0,212,255,0.10), transparent),
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: auto, 48px 48px, 48px 48px;
   }
-  .header { text-align: center; max-width: 480px; margin-bottom: 36px; }
-  .header h1 { font-size: 28px; font-weight: 800; margin: 0 0 8px; }
-  .header p { font-size: 14px; color: var(--paper-dim); margin: 0; }
+
+  a.back {
+    color: var(--paper-dim); font-size: 13px; text-decoration: none;
+    margin-bottom: 32px; align-self: flex-start; max-width: 1100px; width: 100%;
+    display: flex; align-items: center; gap: 6px; transition: color 0.15s;
+  }
+  a.back:hover { color: var(--accent); }
+
+  .header { text-align: center; max-width: 520px; margin-bottom: 44px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.08em; color: var(--accent); text-transform: uppercase;
+    background: var(--accent-soft); border: 1px solid rgba(0,212,255,0.25);
+    padding: 5px 12px; border-radius: 999px; margin-bottom: 18px;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .header h1 { font-size: 32px; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.02em; }
+  .header p { font-size: 14.5px; color: var(--paper-dim); margin: 0; line-height: 1.6; }
+
   .plans {
-    display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; max-width: 380px;
+    display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; max-width: 400px;
   }
   @media (min-width: 900px) {
-    .plans { grid-template-columns: repeat(4, 1fr); max-width: 1080px; align-items: start; }
+    .plans.main-plans { grid-template-columns: repeat(4, 1fr); max-width: 1100px; align-items: stretch; }
   }
+
   .plan {
-    background: var(--ink-soft); border: 1px solid var(--line); border-radius: 20px;
-    padding: 26px 22px; position: relative; display: flex; flex-direction: column;
+    background: linear-gradient(175deg, var(--ink-card), var(--ink-soft));
+    border: 1px solid var(--line); border-radius: 20px;
+    padding: 28px 24px; position: relative; display: flex; flex-direction: column;
+    transition: border-color 0.2s ease, transform 0.2s ease;
   }
-  .plan.featured { border-color: rgba(0,212,255,0.4); box-shadow: 0 0 40px rgba(0,212,255,0.08); }
+  .plan:hover { border-color: rgba(255,255,255,0.16); transform: translateY(-2px); }
+  .plan.featured {
+    border-color: rgba(0,212,255,0.45);
+    box-shadow: 0 0 0 1px rgba(0,212,255,0.15), 0 20px 50px rgba(0,212,255,0.08);
+  }
+  .plan.featured:hover { border-color: rgba(0,212,255,0.6); }
+
   .badge {
-    position: absolute; top: -11px; left: 22px; background: var(--accent); color: var(--ink);
-    font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em; padding: 4px 11px; border-radius: 999px;
+    position: absolute; top: -12px; left: 24px; background: var(--accent); color: var(--ink);
+    font-size: 10px; font-weight: 800; letter-spacing: 0.06em; padding: 5px 12px; border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0,212,255,0.35);
   }
-  .plan-name { font-size: 12px; font-weight: 700; color: var(--paper-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  .plan-price { font-size: 30px; font-weight: 800; margin-bottom: 4px; }
+
+  .plan-name {
+    font-size: 11.5px; font-weight: 700; color: var(--paper-dim); text-transform: uppercase;
+    letter-spacing: 0.08em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .plan-price { font-size: 32px; font-weight: 800; margin-bottom: 2px; letter-spacing: -0.02em; }
   .plan-price span { font-size: 13px; font-weight: 500; color: var(--paper-dim); }
-  .plan-tokens { font-size: 12.5px; font-weight: 700; color: var(--accent); margin-bottom: 14px; }
-  .plan-desc { font-size: 11.5px; color: var(--paper-dim); margin-bottom: 18px; line-height: 1.5; min-height: 34px; }
-  .feature-list { list-style: none; padding: 0; margin: 0 0 20px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
-  .feature-list li { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; line-height: 1.4; }
-  .check { color: var(--success); flex-shrink: 0; }
-  button, a.btn {
-    display: block; width: 100%; padding: 12px; border-radius: 12px; border: none; cursor: pointer;
-    font-size: 13px; font-weight: 700; text-align: center; text-decoration: none; box-sizing: border-box;
+  .plan-tokens {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 8px; padding: 4px 9px;
+    margin: 10px 0 16px; width: fit-content;
   }
+  .plan-desc { font-size: 12px; color: var(--paper-dim); margin-bottom: 20px; line-height: 1.55; min-height: 36px; }
+
+  .feature-list { list-style: none; padding: 0; margin: 0 0 22px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+  .feature-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; line-height: 1.45; color: var(--paper); }
+  .check {
+    color: var(--success); flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%;
+    background: rgba(16,185,129,0.12); display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; margin-top: 1px;
+  }
+
+  button, a.btn {
+    display: block; width: 100%; padding: 13px; border-radius: 12px; border: none; cursor: pointer;
+    font-size: 13.5px; font-weight: 700; text-align: center; text-decoration: none; box-sizing: border-box;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  button:active, a.btn:active { transform: scale(0.98); }
+  button:disabled { opacity: 0.5; cursor: default; }
   .btn-primary { background: var(--accent); color: var(--ink); }
+  .btn-primary:hover { opacity: 0.9; }
   .btn-outline { background: transparent; color: var(--paper); border: 1px solid var(--line); }
-  .status { text-align: center; font-size: 13px; color: var(--paper-dim); margin-top: 24px; min-height: 18px; max-width: 380px; }
-  .error { color: var(--danger); }
-  a.back { color: var(--paper-dim); font-size: 13px; text-decoration: none; margin-bottom: 24px; align-self: flex-start; }
-  a.back:hover { color: var(--accent); }
+  .btn-outline:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.03); }
+
+  .enterprise-wrap { width: 100%; max-width: 1100px; margin-top: 18px; }
+  .enterprise-card {
+    background: linear-gradient(120deg, var(--ink-card), var(--ink-soft));
+    border: 1px solid var(--line); border-radius: 20px;
+    padding: 28px 30px; display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .enterprise-left { flex: 1; min-width: 260px; }
+  .enterprise-card .plan-name { margin-bottom: 8px; }
+  .enterprise-price { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+  .enterprise-desc { font-size: 12.5px; color: var(--paper-dim); line-height: 1.6; max-width: 480px; }
+  .enterprise-card .btn { width: auto; padding: 13px 26px; white-space: nowrap; }
+
+  .status {
+    text-align: center; font-size: 13px; color: var(--paper-dim);
+    margin-top: 28px; min-height: 18px; max-width: 380px;
+  }
+  .status.error { color: var(--danger); }
 </style>
 </head>
 <body>
@@ -58,31 +126,32 @@
 <a href="index.html" class="back">&larr; Retour au site</a>
 
 <div class="header">
+  <div class="eyebrow"><span class="dot"></span> TARIFS</div>
   <h1>Choisis ton plan</h1>
-  <p>1 token = 1 analyse. Renouvel\u00e9 chaque mois. Analyse indicative multi-agents pour d\u00e9tecter le contenu g\u00e9n\u00e9r\u00e9 par IA.</p>
+  <p>1 token = 1 analyse. Renouvelé chaque mois. Analyse indicative multi-agents pour détecter le contenu généré par IA.</p>
 </div>
 
-<div class="plans">
+<div class="plans main-plans">
 
   <div class="plan">
     <div class="plan-name">Gratuit</div>
     <div class="plan-price">0&euro;<span>/mois</span></div>
-    <div class="plan-tokens">10 tokens/mois</div>
-    <div class="plan-desc">Pour d\u00e9couvrir ScanTrace sans engagement.</div>
+    <div class="plan-tokens">◆ 10 tokens/mois</div>
+    <div class="plan-desc">Pour découvrir ScanTrace sans engagement.</div>
     <ul class="feature-list">
       <li><span class="check">&#10003;</span> 6 agents IA (image + texte)</li>
-      <li><span class="check">&#10003;</span> Analyse vid\u00e9o multi-frames</li>
+      <li><span class="check">&#10003;</span> Analyse vidéo multi-frames</li>
       <li><span class="check">&#10003;</span> Analyse hybride de post</li>
-      <li><span class="check">&#10003;</span> Scanner local de m\u00e9tadonn\u00e9es</li>
+      <li><span class="check">&#10003;</span> Scanner local de métadonnées</li>
     </ul>
-    <a href="login.html" class="btn btn-outline">Cr\u00e9er un compte gratuit</a>
+    <a href="login.html" class="btn btn-outline">Créer un compte gratuit</a>
   </div>
 
   <div class="plan">
     <div class="plan-name">Starter</div>
     <div class="plan-price">4,99&euro;<span>/mois</span></div>
-    <div class="plan-tokens">35 tokens/mois</div>
-    <div class="plan-desc">Pour un usage r\u00e9gulier et occasionnel.</div>
+    <div class="plan-tokens">◆ 35 tokens/mois</div>
+    <div class="plan-desc">Pour un usage régulier et occasionnel.</div>
     <ul class="feature-list">
       <li><span class="check">&#10003;</span> Tout ce qui est inclus dans Gratuit</li>
       <li><span class="check">&#10003;</span> 3,5x plus de tokens</li>
@@ -91,11 +160,11 @@
   </div>
 
   <div class="plan featured">
-    <div class="badge">RECOMMAND\u00c9</div>
+    <div class="badge">RECOMMANDÉ</div>
     <div class="plan-name">Growth</div>
     <div class="plan-price">9,99&euro;<span>/mois</span></div>
-    <div class="plan-tokens">75 tokens/mois</div>
-    <div class="plan-desc">Pour un usage fr\u00e9quent, cr\u00e9ateurs et mod\u00e9rateurs.</div>
+    <div class="plan-tokens">◆ 75 tokens/mois</div>
+    <div class="plan-desc">Pour un usage fréquent, créateurs et modérateurs.</div>
     <ul class="feature-list">
       <li><span class="check">&#10003;</span> Tout ce qui est inclus dans Starter</li>
       <li><span class="check">&#10003;</span> Support prioritaire</li>
@@ -106,7 +175,7 @@
   <div class="plan">
     <div class="plan-name">Premium</div>
     <div class="plan-price">19,99&euro;<span>/mois</span></div>
-    <div class="plan-tokens">275 tokens/mois</div>
+    <div class="plan-tokens">◆ 275 tokens/mois</div>
     <div class="plan-desc">Pour un usage intensif au quotidien.</div>
     <ul class="feature-list">
       <li><span class="check">&#10003;</span> Tout ce qui est inclus dans Growth</li>
@@ -117,11 +186,13 @@
 
 </div>
 
-<div class="plans" style="margin-top: 16px; max-width: 380px;">
-  <div class="plan" style="grid-column: 1 / -1;">
-    <div class="plan-name">Entreprise</div>
-    <div class="plan-price" style="font-size: 22px;">Sur devis</div>
-    <div class="plan-desc" style="min-height: 0; margin-top: 8px;">Volume de tokens personnalis\u00e9, facturation d\u00e9di\u00e9e, support prioritaire. \u00c9crivons ensemble l'offre adapt\u00e9e \u00e0 ton usage.</div>
+<div class="enterprise-wrap">
+  <div class="enterprise-card">
+    <div class="enterprise-left">
+      <div class="plan-name">Entreprise</div>
+      <div class="enterprise-price">Sur devis</div>
+      <div class="enterprise-desc">Volume de tokens personnalisé, facturation dédiée, support prioritaire. Écrivons ensemble l'offre adaptée à ton usage.</div>
+    </div>
     <a href="mailto:basile.ceyrac@protonmail.com?subject=ScanTrace%20Entreprise" class="btn btn-outline">Nous contacter</a>
   </div>
 </div>
@@ -160,7 +231,7 @@
 
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Redirection\u2026';
+    btn.textContent = 'Redirection…';
 
     try {
       const idToken = await user.getIdToken();
@@ -173,14 +244,23 @@
           cancelUrl: window.location.href,
         }),
       });
-      const data = await res.json();
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        throw new Error(`R\u00e9ponse invalide du serveur (HTTP ${res.status}). L'API n'est peut-\u00eatre pas encore d\u00e9ploy\u00e9e.`);
+      }
+
       if (data.url) {
         window.location.href = data.url;
       } else {
-        throw new Error(data.error || 'Erreur inconnue.');
+        throw new Error(data.error || `Erreur inconnue (HTTP ${res.status}).`);
       }
     } catch (e) {
-      statusMsg.textContent = e.message;
+      statusMsg.textContent = e.message.includes('Failed to fetch')
+        ? "Impossible de joindre l'API. V\u00e9rifie que create-checkout-session.js est bien d\u00e9ploy\u00e9 sur Vercel."
+        : e.message;
       statusMsg.className = 'status error';
       btn.disabled = false;
       btn.textContent = originalText;
@@ -193,7 +273,7 @@
 
   auth.onAuthStateChanged((user) => {
     if (!user) {
-      statusMsg.textContent = "Connecte-toi pour t'abonner \u00e0 un palier payant.";
+      statusMsg.textContent = "Connecte-toi pour t'abonner à un palier payant.";
     }
   });
 </script>
