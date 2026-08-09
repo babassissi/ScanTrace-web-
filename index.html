@@ -24,8 +24,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <!-- Ajout du module Firebase Auth -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script>
     const firebaseConfig = {
   apiKey: "AIzaSyBkFOHdx41k6m3xK6qOKQo3zO8v35g6OhA",
@@ -39,8 +37,6 @@
   
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    // Initialisation globale de l'authentification
-    const auth = firebase.auth();
   </script>
   <style>
      /* RESET & BASE */
@@ -1509,67 +1505,8 @@
     }
 
     /* ═══════════════════════════════════════════════
-       AUTHENTICATION MODAL & BOT X PANEL
+       BOT LOCK / CONFIG CARDS (r\u00e9utilis\u00e9s ailleurs)
     ═══════════════════════════════════════════════ */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(4, 7, 15, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      padding: 20px;
-    }
-    .modal-overlay.active {
-      display: flex;
-      opacity: 1;
-    }
-    .modal-box {
-      width: 100%;
-      max-width: 420px;
-      border-radius: 24px;
-      overflow: hidden;
-      background: rgba(10, 16, 32, 0.75);
-      border: 1px solid rgba(0, 212, 255, 0.2);
-      box-shadow: 0 30px 70px rgba(0,0,0,0.5), 0 0 50px rgba(0,212,255,0.06);
-    }
-    .modal-box::before {
-      content: '';
-      display: block;
-      height: 2px;
-      background: linear-gradient(90deg, var(--cyan), #4F8EF7);
-    }
-    .modal-body {
-      padding: 32px 28px;
-    }
-    .modal-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      margin-bottom: 24px;
-    }
-    .modal-tab {
-      background: none;
-      border: none;
-      padding: 12px;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: color 0.2s, border-color 0.2s;
-      border-bottom: 2px solid transparent;
-      text-align: center;
-    }
-    .modal-tab.active {
-      color: var(--cyan);
-      border-bottom-color: var(--cyan);
-    }
-    
     .bot-lock-card {
       padding: 48px 32px;
       text-align: center;
@@ -1653,9 +1590,9 @@
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8V2M3.5 5.5L6 8l2.5-2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 10.5h9" stroke-linecap="round"/></svg>
       Télécharger
     </a>
-    <button id="auth-btn" class="nav-cta" style="margin-left: 8px; cursor:pointer;">
+    <a id="auth-btn" class="nav-cta" href="login.html" style="margin-left: 8px;">
       Connexion
-    </button>
+    </a>
   </nav>
 </header>
 
@@ -2124,52 +2061,6 @@
   <p>Contact : <a href="mailto:scantrace@proton.me">scantrace@proton.me</a></p>
 </footer>
 
-<!-- ═══════════════════════════════════════════════
-     AUTHENTICATION MODAL
-═══════════════════════════════════════════════ -->
-<div class="modal-overlay" id="authModal">
-  <div class="modal-box">
-    <div class="modal-tabs">
-      <button type="button" class="modal-tab active" id="tab-login" onclick="switchAuthTab('login')">Se connecter</button>
-      <button type="button" class="modal-tab" id="tab-register" onclick="switchAuthTab('register')">S'inscrire</button>
-    </div>
-    <div class="modal-body">
-      <form id="authForm" style="display:flex; flex-direction:column; gap:16px;">
-        <div class="form-group">
-          <label id="authEmailLabel" for="authEmail">Adresse E-mail</label>
-          <input type="email" id="authEmail" placeholder="nom@exemple.com" required>
-        </div>
-        <div class="form-group">
-          <label for="authPassword">Mot de passe</label>
-          <input type="password" id="authPassword" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="form-submit" id="authSubmitBtn">
-          Connexion
-        </button>
-        
-        <!-- Séparateur "OU" -->
-        <div style="display:flex; align-items:center; gap:10px; margin: 16px 0; color: rgba(255,255,255,0.15); font-size:10px; font-family:monospace; text-transform:uppercase;">
-          <div style="flex:1; height:1px; background:rgba(255,255,255,0.06);"></div>
-          OU
-          <div style="flex:1; height:1px; background:rgba(255,255,255,0.06);"></div>
-        </div>
-
-        <!-- Bouton Google -->
-        <button type="button" id="googleAuthBtn" class="btn-ghost" style="width:100%; justify-content:center; gap:10px; padding:12px; cursor:pointer;">
-          <svg viewBox="0 0 24 24" width="16" height="16" style="display:block;">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.18 1-.78 1.85-1.63 2.4l2.6 2.02c1.51-1.39 2.67-3.44 2.67-5.91z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-2.6-2.02c-.72.48-1.64.77-2.68.77-2.68 0-4.96-1.81-5.77-4.24l-2.68 2c1.81 3.59 5.5 5.91 9.77 5.91z" fill="#34A853"/>
-            <path d="M6.23 14.85c-.21-.63-.33-1.3-.33-2s.12-1.37.33-2l-2.68-2c-.7 1.39-1.1 2.96-1.1 4.63s.4 3.24 1.1 4.63l2.68-2z" fill="#FBBC05"/>
-            <path d="M12 5c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.73 1 4.04 3.32 2.23 6.91l2.68 2C5.72 6.46 8 4.5 12 5z" fill="#EA4335"/>
-          </svg>
-          Continuer avec Google
-        </button>
-
-        <p id="authErrorMsg" style="color:#F87171; font-size:12px; text-align:center; min-height:14px; margin-top:12px;"></p>
-      </form>
-    </div>
-  </div>
-</div>
 <!-- ═══════════════════════════════════════════════
      SCRIPTS
 ═══════════════════════════════════════════════ -->
@@ -2776,164 +2667,7 @@ function initScanTraceTracking() {
     setInterval(heartbeat, 20000);
     window.onbeforeunload = () => presenceRef.delete();
 }
-// ── Gestion de l'Authentification & Bot X ────────────────────────────────────
-
-const authModal = document.getElementById('authModal');
-const authBtn = document.getElementById('auth-btn');
-
-function openAuthModal() {
-  authModal.classList.add('active');
-}
-
-authModal.addEventListener('click', (e) => {
-  if (e.target === authModal) {
-    authModal.classList.remove('active');
-  }
-});
-
-authBtn.addEventListener('click', () => {
-  const user = auth.currentUser;
-  if (user) {
-    auth.signOut();
-  } else {
-    openAuthModal();
-  }
-});
-
-let authMode = 'login';
-function switchAuthTab(mode) {
-  authMode = mode;
-  document.getElementById('tab-login').classList.toggle('active', mode === 'login');
-  document.getElementById('tab-register').classList.toggle('active', mode === 'register');
-  document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Connexion' : "S'inscrire";
-  document.getElementById('authErrorMsg').textContent = '';
-}
-// Écouteur d'authentification Google
-document.getElementById('googleAuthBtn').addEventListener('click', () => {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  const errorMsgEl = document.getElementById('authErrorMsg');
-  
-  auth.signInWithPopup(provider)
-    .then(() => {
-      authModal.classList.remove('active');
-    })
-    .catch((err) => {
-      errorMsgEl.textContent = "Erreur Google : " + err.message;
-    });
-});
-document.getElementById('authForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  const errorMsgEl = document.getElementById('authErrorMsg');
-  const submitBtn = document.getElementById('authSubmitBtn');
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Traitement en cours...';
-  errorMsgEl.textContent = '';
-
-  if (authMode === 'login') {
-    auth.signInWithEmailAndPassword(email, password)
-      .then(() => {
-        authModal.classList.remove('active');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Connexion';
-      })
-      .catch((err) => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Connexion';
-        errorMsgEl.textContent = "Erreur de connexion : " + err.message;
-      });
-  } else {
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(() => {
-        authModal.classList.remove('active');
-        submitBtn.disabled = false;
-        submitBtn.textContent = "S'inscrire";
-      })
-      .catch((err) => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "S'inscrire";
-        errorMsgEl.textContent = "Erreur d'inscription : " + err.message;
-      });
-  }
-});
-
-auth.onAuthStateChanged((user) => {
-  const botUnlockedState = document.getElementById('bot-unlocked-state');
-  const botLockedState = document.getElementById('bot-locked-state');
-
-  if (user) {
-    authBtn.textContent = 'Déconnexion';
-    botUnlockedState.style.display = 'none';
-    botLockedState.style.display = 'block';
-    loadUserTwitterHandle(user);
-  } else {
-    authBtn.textContent = 'Connexion';
-    botUnlockedState.style.display = 'flex';
-    botLockedState.style.display = 'none';
-    document.getElementById('twitterRegisterForm').style.display = 'flex';
-    document.getElementById('twitterSuccess').style.display = 'none';
-    document.getElementById('twitterUsernameInput').value = '';
-  }
-});
-
-function loadUserTwitterHandle(user) {
-  db.collection('users').doc(user.uid).get()
-    .then((doc) => {
-      if (doc.exists && doc.data().twitterUsername) {
-        document.getElementById('twitterUsernameInput').value = doc.data().twitterUsername;
-        document.getElementById('twitterRegisterForm').style.display = 'none';
-        document.getElementById('twitterSuccess').style.display = 'block';
-        document.getElementById('twitterSuccessMsg').textContent = `Votre compte @${doc.data().twitterUsername} est lié à ScanTrace.`;
-      } else {
-        document.getElementById('twitterRegisterForm').style.display = 'flex';
-        document.getElementById('twitterSuccess').style.display = 'none';
-      }
-    })
-    .catch((err) => console.error("Erreur de lecture Firestore :", err));
-}
-
-document.getElementById('twitterRegisterForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const rawUsername = document.getElementById('twitterUsernameInput').value.trim();
-  const twitterUsername = rawUsername.replace(/^@/, '').toLowerCase();
-
-  if (!twitterUsername) return;
-
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Enregistrement...';
-
-  db.collection('users').doc(user.uid).set({
-    uid: user.uid,
-    email: user.email,
-    twitterUsername: twitterUsername,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true })
-    .then(() => {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Enregistrer mon compte Twitter';
-      document.getElementById('twitterRegisterForm').style.display = 'none';
-      document.getElementById('twitterSuccess').style.display = 'block';
-      document.getElementById('twitterSuccessMsg').textContent = `Votre compte @${twitterUsername} est lié à ScanTrace.`;
-    })
-    .catch((err) => {
-      console.error("Erreur d'enregistrement Firestore :", err);
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Enregistrer mon compte Twitter';
-      alert("Erreur lors de la sauvegarde : " + err.message);
-    });
-});
-
-// Sécurité : On attend que le DOM soit chargé ET que Firebase soit dispo
-window.addEventListener('load', () => {
-    // On attend 1 seconde pour être sûr que Firebase est bien initialisé
-    setTimeout(initScanTraceTracking, 1000);
-});
+// ── Fin de la gestion des avis ────────────────────────────────────────────
 
 // Sécurité : On attend que le DOM soit chargé ET que Firebase soit dispo
 window.addEventListener('load', () => {
