@@ -24,6 +24,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script>
     const firebaseConfig = {
   apiKey: "AIzaSyBkFOHdx41k6m3xK6qOKQo3zO8v35g6OhA",
@@ -37,6 +38,7 @@
   
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const siteAuth = firebase.auth();
   </script>
   <style>
      /* RESET & BASE */
@@ -1586,6 +1588,7 @@
     <a href="#suggestions">Idées</a>
 
     <a href="#changelog" class="nav-hide">Changelog</a>
+    <a href="pricing.html" class="nav-hide">Tarifs</a>
     <a href="extension%20scantrace%20Beta.zip" class="nav-cta" download>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8V2M3.5 5.5L6 8l2.5-2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 10.5h9" stroke-linecap="round"/></svg>
       Télécharger
@@ -2674,6 +2677,24 @@ window.addEventListener('load', () => {
     // On attend 1 seconde pour être sûr que Firebase est bien initialisé
     setTimeout(initScanTraceTracking, 1000);
 });
+
+// ── Reflète l'état de connexion dans le bouton "Connexion" de la nav ──────
+(function reflectAuthState() {
+  const authBtn = document.getElementById('auth-btn');
+  if (!authBtn) return;
+  siteAuth.onAuthStateChanged((user) => {
+    if (user) {
+      const label = (user.email || 'Compte').split('@')[0];
+      authBtn.textContent = label;
+      authBtn.href = 'pricing.html';
+      authBtn.title = user.email || '';
+    } else {
+      authBtn.textContent = 'Connexion';
+      authBtn.href = 'login.html';
+      authBtn.title = '';
+    }
+  });
+})();
 </script>
 </body>
 </html>
