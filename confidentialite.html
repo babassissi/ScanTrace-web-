@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Politique de confidentialité — ScanTrace</title>
+<style>
+  :root {
+    --cyan: #00D4FF;
+    --bg: #04070F;
+    --card: #0C1526;
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #C8D6E8;
+    --text-hi: #EEF3FA;
+    --muted: rgba(200, 214, 232, 0.5);
+    --good: #10B981;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.7; padding: 40px 20px 80px;
+  }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .back { color: var(--muted); font-size: 13px; display: inline-block; margin-bottom: 24px; }
+  h1 { font-size: 26px; font-weight: 800; color: var(--text-hi); margin: 0 0 4px; }
+  .updated { font-size: 12px; color: var(--muted); margin-bottom: 32px; }
+  h2 { font-size: 16px; font-weight: 700; color: var(--text-hi); margin: 32px 0 10px; }
+  h3 { font-size: 13px; font-weight: 700; color: var(--text-hi); margin: 18px 0 6px; }
+  p { font-size: 14px; margin: 0 0 12px; }
+  ul { margin: 0 0 12px; padding-left: 20px; font-size: 14px; }
+  li { margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 12px 0 20px; }
+  th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; padding: 0 4px; }
+  .disclaimer {
+    background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2); border-radius: 14px;
+    padding: 14px 16px; font-size: 12.5px; color: var(--muted); margin-bottom: 32px;
+  }
+  .right-box {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px 18px; margin: 16px 0;
+  }
+  footer { margin-top: 48px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back">&larr; Retour au site</a>
+  <h1>Politique de confidentialité</h1>
+  <div class="updated">Dernière mise à jour : 14 août 2026 — ScanTrace, service en version bêta</div>
+
+  <div class="disclaimer">
+    Ce document décrit concrètement quelles données ScanTrace collecte et pourquoi, à travers le site,
+    l'extension de navigateur et l'application Android. En cas de question, écris à
+    <a href="mailto:scantrace@proton.me">scantrace@proton.me</a>.
+  </div>
+
+  <h2>1. Quelles données sont collectées</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Donnée</th><th>Quand</th><th>Pourquoi</th></tr></thead>
+      <tbody>
+        <tr><td>Adresse e-mail</td><td>Création de compte (Google ou e-mail/mot de passe)</td><td>Identifier ton compte, appliquer ton quota, t'envoyer un e-mail si tu as coché la case marketing</td></tr>
+        <tr><td>Mot de passe</td><td>Création de compte par e-mail</td><td>Géré et chiffré entièrement par Firebase Authentication (Google) — ScanTrace ne voit ni ne stocke jamais ton mot de passe en clair</td></tr>
+        <tr><td>Identifiant d'appareil (anonyme)</td><td>Utilisation sans compte</td><td>Appliquer le quota d'essai (10 analyses/mois) sans te demander de compte</td></tr>
+        <tr><td>Contenu analysé (texte, image, vidéo, lien)</td><td>Chaque analyse</td><td>Transmis aux modèles de détection (voir section 3) pour produire un résultat, puis non conservé côté serveur ScanTrace</td></tr>
+        <tr><td>Compteur d'utilisation, série de « flammes », badges débloqués, code de parrainage</td><td>Utilisation avec compte</td><td>Faire fonctionner le quota, la série de connexion et le programme de parrainage</td></tr>
+        <tr><td>Avis / retours bêta (texte libre)</td><td>Envoi volontaire depuis Réglages &gt; Bêta</td><td>Améliorer l'application ; ton e-mail y est joint uniquement si tu es connecté</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>2. Ce que ScanTrace ne fait jamais</h2>
+  <ul>
+    <li>Ne revend aucune donnée personnelle ni contenu analysé à des tiers.</li>
+    <li>Ne conserve pas le contenu soumis pour une analyse standard une fois le résultat renvoyé — il n'est ni stocké en base ni journalisé côté serveur ScanTrace.</li>
+    <li>Ne partage ton adresse e-mail avec personne d'autre que les prestataires techniques listés ci-dessous, nécessaires au fonctionnement du service.</li>
+  </ul>
+  <p style="font-size:12.5px; color:var(--muted);">
+    Exception : les contenus partagés volontairement via le <strong>Mode Duel</strong> (défier un ami) sont
+    conservés le temps que le lien de défi reste actif, puisque c'est leur fonction même. Cette fonctionnalité
+    n'est pas activée dans la version actuelle de l'application.
+  </p>
+
+  <h2>3. Prestataires techniques utilisés</h2>
+  <p>ScanTrace s'appuie sur les services suivants pour fonctionner. Chacun traite uniquement les données strictement nécessaires à sa tâche :</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Prestataire</th><th>Rôle</th></tr></thead>
+      <tbody>
+        <tr><td>Firebase (Google)</td><td>Authentification des comptes et base de données (quotas, badges, parrainage, avis)</td></tr>
+        <tr><td>Vercel</td><td>Hébergement de l'API qui reçoit tes requêtes d'analyse</td></tr>
+        <tr><td>Hugging Face</td><td>Modèles de détection IA pour le texte et l'image</td></tr>
+        <tr><td>Sightengine</td><td>Détection d'images/vidéos générées par IA</td></tr>
+        <tr><td>Sapling</td><td>Détection de texte généré par IA</td></tr>
+        <tr><td>Stripe / Google Play Billing</td><td>Traitement des paiements, si tu souscris à une offre payante</td></tr>
+        <tr><td>GitHub Pages</td><td>Hébergement du site web</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>4. Combien de temps tes données sont conservées</h2>
+  <ul>
+    <li><strong>Compte et données associées</strong> (quota, série, badges) : tant que ton compte existe.</li>
+    <li><strong>Contenu analysé</strong> : non conservé après renvoi du résultat.</li>
+    <li><strong>Avis bêta</strong> : conservés pour suivre les retours, supprimables sur demande.</li>
+    <li>Suppression de compte : écris à <a href="mailto:scantrace@proton.me">scantrace@proton.me</a>, traité sous 30 jours.</li>
+  </ul>
+
+  <h2>5. Tes droits (RGPD)</h2>
+  <div class="right-box">
+    <p>Si tu es dans l'Union européenne, tu disposes d'un droit d'accès, de rectification, de suppression et de portabilité de tes données, ainsi que du droit de retirer ton consentement (par exemple, décocher la case e-mail marketing à tout moment depuis Réglages).</p>
+    <p style="margin-bottom:0;">Pour exercer ces droits : <a href="mailto:scantrace@proton.me">scantrace@proton.me</a></p>
+  </div>
+
+  <h2>6. Mineurs</h2>
+  <p>ScanTrace ne s'adresse pas spécifiquement aux mineurs de moins de 15 ans. Si tu penses qu'un enfant a créé un compte sans autorisation parentale, contacte-nous pour suppression.</p>
+
+  <h2>7. Modifications</h2>
+  <p>Cette politique peut évoluer, notamment à mesure que le service sort de bêta. La date de mise à jour en haut de page reflète la dernière version.</p>
+
+  <footer>
+    Voir aussi : <a href="mentions-legales.html">Mentions légales</a> · <a href="cgu.html">Conditions d'utilisation</a>
+  </footer>
+</div>
+</body>
+</html>
