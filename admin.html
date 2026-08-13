@@ -70,6 +70,17 @@
   a.back { color: var(--paper-dim); font-size: 13px; text-decoration: none; }
   a.back:hover { color: var(--accent); }
 
+  .feedback-list { display: flex; flex-direction: column; gap: 10px; }
+  .feedback-card {
+    background: var(--ink-card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .feedback-card .feedback-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 10px; }
+  .feedback-card .feedback-email { font-size: 12px; font-weight: 700; color: var(--accent); }
+  .feedback-card .feedback-date { font-size: 10.5px; color: var(--paper-dim); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .feedback-card .feedback-msg { font-size: 13px; line-height: 1.5; color: var(--paper); white-space: pre-wrap; }
+  .feedback-empty { text-align: center; padding: 30px 0; color: var(--paper-dim); font-size: 12px; }
+
   #loginBox { max-width: 380px; margin: 60px auto; text-align: center; }
   #loginBox input {
     width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line);
@@ -139,6 +150,11 @@
   }
   function planLabel(plan) {
     return { free: 'Gratuit', starter: 'Starter', growth: 'Growth', premium: 'Premium', admin: 'Admin' }[plan] || plan;
+  }
+  function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s || '';
+    return div.innerHTML;
   }
   function fmtDate(iso) {
     try { return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
@@ -317,6 +333,21 @@
                 `).join('') : '<tr><td colspan="4" style="text-align:center; color: var(--paper-dim);">Aucun parrainage pour le moment</td></tr>'}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Avis b\u00eata r\u00e9cents (app)</h2>
+          <div class="feedback-list">
+            ${data.recentFeedback.length ? data.recentFeedback.map((f) => `
+              <div class="feedback-card">
+                <div class="feedback-head">
+                  <span class="feedback-email">${f.email || 'Anonyme'}</span>
+                  <span class="feedback-date">${f.createdAt ? fmtDate(f.createdAt) : ''}</span>
+                </div>
+                <div class="feedback-msg">${escapeHtml(f.message)}</div>
+              </div>
+            `).join('') : '<div class="feedback-empty">Aucun avis pour le moment.</div>'}
           </div>
         </div>
 
