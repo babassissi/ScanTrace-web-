@@ -286,10 +286,10 @@
         <div class="grid">
           <div class="card"><div class="label">Utilisateurs totaux</div><div class="value">${data.totalUsers}</div></div>
           <div class="card"><div class="label">Revenu mensuel estim\u00e9</div><div class="value success">${data.mrr.toFixed(2)}&euro;</div></div>
-          <div class="card"><div class="label">Tokens utilis\u00e9s ce mois</div><div class="value accent">${data.tokensUsedThisMonth}</div></div>
+          <div class="card"><div class="label">Cr\u00e9dits utilis\u00e9s ce mois</div><div class="value accent">${data.tokensUsedThisMonth}</div></div>
           <div class="card"><div class="label">Comptes actifs ce mois</div><div class="value">${data.activeUsersThisMonth}</div></div>
           <div class="card"><div class="label">Parrainages r\u00e9ussis</div><div class="value">${data.totalReferrals}</div></div>
-          <div class="card"><div class="label">Tokens bonus distribu\u00e9s</div><div class="value">${data.totalBonusTokens}</div></div>
+          <div class="card"><div class="label">Cr\u00e9dits bonus distribu\u00e9s</div><div class="value">${data.totalBonusTokens}</div></div>
         </div>
 
         <div class="chart-grid">
@@ -302,7 +302,7 @@
           </div>
           <div class="chart-card">
             <div class="chart-head">
-              <div class="chart-title">Tokens utilis\u00e9s par mois</div>
+              <div class="chart-title">Cr\u00e9dits utilis\u00e9s par mois</div>
               <div class="chart-total">${data.tokensByMonth.reduce((s, p) => s + p.count, 0)} au total</div>
             </div>
             ${data.tokensByMonth.length ? '<canvas id="tokensChart" height="180"></canvas>' : '<div class="chart-empty">Pas encore de donn\u00e9es d\u2019usage.</div>'}
@@ -326,7 +326,7 @@
           <h2>Top parrains</h2>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>#</th><th>UID</th><th>Amis parrain\u00e9s</th><th>Tokens bonus</th></tr></thead>
+              <thead><tr><th>#</th><th>UID</th><th>Amis parrain\u00e9s</th><th>Crédits bonus</th></tr></thead>
               <tbody>
                 ${data.topReferrers.length ? data.topReferrers.map((r, i) => `
                   <tr><td class="rank">${i + 1}</td><td class="mono">${r.uid.slice(0, 12)}\u2026</td><td>${r.referralCount}</td><td>+${r.bonusTokens}</td></tr>
