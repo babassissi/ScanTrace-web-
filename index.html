@@ -2187,7 +2187,7 @@ function buildCardEl(rev, idx){
     <div class="rev-stars">${starsSVG(rev.rating)}</div>
     <div class="rev-badge" style="color:${badge.color};border-color:${badge.color}44;background:${badge.color}10">${badge.label}</div>
     <div class="rev-text">${esc(rev.text)}</div>
-    <div class="rev-date">${rev.date||'Récemment'}</div>`;
+    <div class="rev-date">${esc(rev.date||'Récemment')}</div>`;
   el.addEventListener('click', ()=>goTo(idx));
   return el;
 }
