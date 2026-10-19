@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>Retour à ScanTrace</title>
+<style>
+  :root { --cyan:#00D4FF; --bg:#04070F; --card:#0C1526; --border:rgba(255,255,255,0.08); --text:#C8D6E8; --text-hi:#EEF3FA; --muted:rgba(200,214,232,0.5); }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100dvh; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; line-height:1.6; padding:40px 20px; }
+  .wrap { max-width:420px; width:100%; text-align:center; }
+  .ok { width:56px; height:56px; margin:0 auto 20px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(0,212,255,0.12); color:var(--cyan); font-size:28px; }
+  h1 { font-size:22px; font-weight:800; color:var(--text-hi); margin:0 0 8px; text-wrap:balance; }
+  p { font-size:14px; margin:0 0 24px; color:var(--text); }
+  .btn { display:block; width:100%; padding:16px; border-radius:14px; background:var(--cyan); color:#04121A; font-weight:700; font-size:16px; text-decoration:none; transition:transform .15s; }
+  .btn:active { transform:scale(0.98); }
+  .hint { font-size:12px; color:var(--muted); margin-top:16px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="ok" aria-hidden="true">&#10003;</div>
+  <h1 id="title">Mot de passe changé</h1>
+  <div id="android">
+    <p id="lead">Tu peux te reconnecter dans l'application avec ton nouveau mot de passe.</p>
+    <a id="open" class="btn" href="#">Ouvrir ScanTrace</a>
+  </div>
+  <p id="other" hidden>Retourne dans l'application ScanTrace sur ton téléphone et connecte-toi avec ton nouveau mot de passe.</p>
+</main>
+<script>
+  // Page de retour après le changement de mot de passe (bouton « Continuer »
+  // de la page Firebase). Sur Android, rouvre l'appli via scantrace://open ;
+  // si elle n'est pas installée, Chrome bascule sur la page du test Play.
+  var fallback = 'https://play.google.com/apps/testing/com.scantrace.detector';
+  var intentUrl = 'intent://open#Intent;scheme=scantrace;package=com.scantrace.detector;S.browser_fallback_url=' + encodeURIComponent(fallback) + ';end';
+  var isAndroid = /Android/i.test(navigator.userAgent);
+  var fr = /^fr/i.test(navigator.language || 'fr');
+  if (!fr) {
+    document.documentElement.lang = 'en';
+    document.getElementById('title').textContent = 'Password changed';
+    document.getElementById('lead').textContent = 'You can sign back in to the app with your new password.';
+    document.getElementById('open').textContent = 'Open ScanTrace';
+    document.getElementById('other').textContent = 'Go back to the ScanTrace app on your phone and sign in with your new password.';
+  }
+  var btn = document.getElementById('open');
+  if (isAndroid) {
+    btn.href = intentUrl;
+    // Tentative automatique ; le bouton reste là si le navigateur la bloque.
+    setTimeout(function () { location.href = intentUrl; }, 300);
+  } else {
+    document.getElementById('android').hidden = true;
+    document.getElementById('other').hidden = false;
+  }
+</script>
+</body>
+</html>
