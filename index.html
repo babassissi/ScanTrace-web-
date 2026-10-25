@@ -320,6 +320,14 @@
   /* Visiteur sur iPhone : la carte passe en premier et s'illumine. */
   .is-ios .ios-card { margin: 0 0 32px; border-color: rgba(76,141,255,.45); box-shadow: 0 0 0 4px rgba(76,141,255,.08); }
   .is-ios .join-steps { opacity: .5; }
+  .invite { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; padding: 10px 16px 10px 12px; border-radius: 16px; background: linear-gradient(180deg, rgba(255,162,58,.12), rgba(255,162,58,.05)); border: 1px solid rgba(255,162,58,.3); color: var(--text); font-size: 14px; transition: border-color .25s, transform .25s var(--ease); }
+  .invite:hover { border-color: rgba(255,162,58,.55); }
+  .invite > i:first-child { color: var(--amber); font-size: 20px; }
+  .invite > i:last-child { color: var(--dim); font-size: 14px; }
+  .invite b { font-weight: 600; } .invite b.mono { color: var(--amber); letter-spacing: .06em; }
+  .jstep-code { border-color: rgba(255,162,58,.35); }
+  .jstep-code .n { background: linear-gradient(180deg, #FFB45C, #F08A1D); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+  .jstep-code b.mono { letter-spacing: .06em; }
   .share-page { position: relative; margin-top: 44px; padding-top: 32px; border-top: 1px solid var(--line-soft); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
   .share-page p { color: var(--dim); max-width: 34em; }
   .share-page p strong { color: var(--text); font-weight: 600; }
@@ -474,6 +482,7 @@
           <a class="btn btn-primary" href="#rejoindre">Rejoindre la bêta<span class="go"><i class="ph-bold ph-arrow-right"></i></span></a>
           <a class="btn btn-ghost" href="#comment"><i class="ph ph-play-circle"></i>Voir comment ça marche</a>
         </div>
+        <a class="invite rise" id="invite" href="#etape-code" style="--d:.9s" hidden><i class="ph-fill ph-gift"></i><span>Un ami t'invite&nbsp;: <b>+5 crédits</b> pour vous deux avec le code <b class="mono" data-ref></b></span><i class="ph-bold ph-arrow-down"></i></a>
         <div class="hero-meta rise" style="--d:.94s">
           <span><i class="ph ph-gift"></i>50 crédits offerts / mois</span>
           <span><i class="ph ph-lock-simple"></i>Contenus jamais conservés</span>
@@ -693,6 +702,14 @@
                 <a class="btn btn-store track-dl" href="https://play.google.com/store/apps/details?id=com.scantrace.detector" target="_blank" rel="noopener"><svg class="logo-svg"><use href="#i-googleplay"/></svg><span><small>Disponible sur</small><b>Google Play</b></span></a>
               </div>
             </li>
+            <li class="jstep jstep-code" id="etape-code" hidden>
+              <span class="n">4</span>
+              <div>
+                <h3>Entre le code de ton ami</h3>
+                <p>Dans l'app, connecte-toi, puis ouvre Réglages &gt; «&nbsp;Tu as un code d'ami&nbsp;?&nbsp;». Vous gagnez chacun 5 crédits.</p>
+                <button class="btn btn-ghost" type="button" id="copyRef"><i class="ph-bold ph-copy"></i><span class="lbl">Copier le code <b class="mono" data-ref></b></span></button>
+              </div>
+            </li>
           </ol>
         </div>
         <div class="ios-card" id="iphone">
@@ -866,6 +883,17 @@
     const join = $('.join'), card = $('#iphone');
     join.insertBefore(card, join.firstChild);
     $$('a[href="#rejoindre"]').forEach((a) => { a.href = '#iphone'; });
+  }
+
+  // ── Lien de parrainage (?ref=CODE) : on affiche le code et où le saisir ─
+  const ref = (new URLSearchParams(location.search).get('ref') || '').trim().toUpperCase();
+  if (/^[A-Z0-9]{4,12}$/.test(ref)) {
+    $$('[data-ref]').forEach((el) => { el.textContent = ref; });
+    $('#invite').hidden = false; $('#etape-code').hidden = false;
+    $('#copyRef').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(ref); toast('Code copié : ' + ref); }
+      catch (e) { prompt('Copie ce code :', ref); }
+    });
   }
 
   // ── Firebase (avis + statistiques du panneau admin) ───────────────
