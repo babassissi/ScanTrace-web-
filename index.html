@@ -17,7 +17,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');
+(function(){var q=new URLSearchParams(location.search).get('lang'),s=null;try{s=localStorage.getItem('st_lang')}catch(e){}
+var l=q||s||((navigator.languages&&navigator.languages[0])||navigator.language||'fr');
+if(!/^fr/i.test(l)){var d=document.documentElement;d.classList.add('i18n-attente');setTimeout(function(){d.classList.remove('i18n-attente')},1500);}})();</script>
 <style>
   :root {
     color-scheme: dark;
@@ -50,6 +53,7 @@
   a { color: inherit; text-decoration: none; }
   button { font: inherit; color: inherit; }
   [hidden] { display: none !important; }
+  .i18n-attente body { visibility: hidden; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 10px; }
   ::selection { background: var(--accent); color: #fff; }
   .logo-svg { width: 1em; height: 1em; fill: currentColor; flex-shrink: 0; }
@@ -113,6 +117,10 @@
   .nav-links a.link:hover { color: var(--text); }
   .nav-links a.link:hover::after { transform: scaleX(1); }
   .nav-links .btn { margin-left: 10px; }
+  .lang { display: inline-flex; gap: 2px; padding: 3px; margin-left: 8px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.03); cursor: pointer; font: 600 12px var(--mono); letter-spacing: .06em; }
+  .lang span { padding: 6px 9px; border-radius: 999px; color: var(--faint); transition: background .25s, color .25s; }
+  .lang span.on { background: var(--surface-hi); color: var(--text); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+  .lang:hover span:not(.on) { color: var(--dim); }
   .progress { position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%; background: linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent-soft)); transform-origin: left; transform: scaleX(var(--p, 0)); opacity: .9; }
 
   /* ── Hero : remplit le premier écran, le bandeau tombe pile en bas ── */
@@ -446,6 +454,13 @@
     .app .sq, .app.st .sq img { width: 46px; height: 46px; border-radius: 14px; }
     .marquee span { font-size: 18px; }
   }
+  /* Petits téléphones : le menu garde le logo (icône), FR/EN et le bouton. */
+  @media (max-width: 460px) {
+    .nav .logo > span { display: none; }
+    .nav-links { gap: 8px; }
+    .lang { margin-left: 0; }
+    .nav-links .btn { margin-left: 0; }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
     .js .reveal, .js .kin .w, .js .rise { opacity: 1; transform: none; filter: none; }
@@ -463,6 +478,7 @@
       <a class="link" href="#comment">Comment ça marche</a>
       <a class="link" href="#fonctions">Fonctionnalités</a>
       <a class="link" href="#avis">Avis</a>
+      <button class="lang" id="langBtn" type="button" aria-label="Switch to English"><span data-l="fr">FR</span><span data-l="en">EN</span></button>
       <a class="btn btn-primary btn-sm" href="#rejoindre">Rejoindre la bêta<span class="go"><i class="ph-bold ph-arrow-right"></i></span></a>
     </nav>
   </div>
@@ -805,6 +821,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="i18n.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>
@@ -870,10 +887,10 @@
   // ── Partager la page ──────────────────────────────────────────────
   const PAGE_URL = 'https://babassissi.github.io/ScanTrace-web-/';
   $('#sharePage').addEventListener('click', async () => {
-    const data = { title: 'ScanTrace', text: "C'est vrai, ou c'est de l'IA ? Rejoins la bêta de ScanTrace :", url: PAGE_URL };
+    const data = { title: 'ScanTrace', text: T("C'est vrai, ou c'est de l'IA ? Rejoins la bêta de ScanTrace :"), url: PAGE_URL };
     if (navigator.share) { try { await navigator.share(data); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
-    try { await navigator.clipboard.writeText(PAGE_URL); toast('Lien copié, tu peux le coller où tu veux'); }
-    catch (e) { prompt('Copie ce lien :', PAGE_URL); }
+    try { await navigator.clipboard.writeText(PAGE_URL); toast(T('Lien copié, tu peux le coller où tu veux')); }
+    catch (e) { prompt(T('Copie ce lien :'), PAGE_URL); }
   });
 
   // ── Visiteur sur iPhone / iPad : la liste d'attente passe en premier ─
@@ -891,8 +908,8 @@
     $$('[data-ref]').forEach((el) => { el.textContent = ref; });
     $('#invite').hidden = false; $('#etape-code').hidden = false;
     $('#copyRef').addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(ref); toast('Code copié : ' + ref); }
-      catch (e) { prompt('Copie ce code :', ref); }
+      try { await navigator.clipboard.writeText(ref); toast(T('Code copié :') + ' ' + ref); }
+      catch (e) { prompt(T('Copie ce code :'), ref); }
     });
   }
 
@@ -920,7 +937,7 @@
   function renderReviews() {
     const list = $('#reviewList');
     if (!all.length) {
-      list.innerHTML = '<div class="empty"><i class="ph ph-chat-circle-dots" style="font-size:28px;color:var(--accent)"></i><p style="margin-top:8px">Pas encore d\'avis. Sois le premier ou la première à donner le tien&nbsp;!</p></div>';
+      list.innerHTML = '<div class="empty"><i class="ph ph-chat-circle-dots" style="font-size:28px;color:var(--accent)"></i><p style="margin-top:8px">' + T("Pas encore d'avis. Sois le premier ou la première à donner le tien !") + '</p></div>';
       $('#moreBtn').hidden = true;
       return;
     }
@@ -929,8 +946,8 @@
       return `<article class="review" style="animation-delay:${(i % PAGE_SIZE) * 60}ms">
         <div class="review-head">
           <span class="avatar" style="background:${colorFor(name)}">${esc(name.trim().charAt(0).toUpperCase() || '?')}</span>
-          <div><strong>${esc(name)}</strong><small>${esc(r.date || 'Bêta-testeur')}</small></div>
-          <span class="stars" aria-label="${r.rating} sur 5">${starsHtml(r.rating)}</span>
+          <div><strong>${esc(name)}</strong><small>${esc(r.date || T('Bêta-testeur'))}</small></div>
+          <span class="stars" aria-label="${r.rating} / 5">${starsHtml(r.rating)}</span>
         </div>
         <p>${esc(r.text)}</p>
       </article>`;
@@ -940,7 +957,7 @@
 
   function renderScore() {
     const n = all.length;
-    $('#count').textContent = n ? `sur ${n} avis de testeurs` : 'Aucun avis pour le moment';
+    $('#count').textContent = n ? (LANG === 'en' ? `from ${n} tester review${n > 1 ? 's' : ''}` : `sur ${n} avis de testeurs`) : T('Aucun avis pour le moment');
     const avg = n ? all.reduce((a, r) => a + r.rating, 0) / n : 0;
     $('#avg').textContent = n ? avg.toFixed(1).replace('.', ',') : '–';
     $('#avgStars').innerHTML = starsHtml(avg);
@@ -957,14 +974,14 @@
     db.collection('reviews').orderBy('createdAt', 'desc').onSnapshot((snap) => {
       all = snap.docs.map((d) => d.data()).filter((r) => r && typeof r.rating === 'number' && r.rating >= 1 && r.rating <= 5 && r.text);
       renderScore(); renderReviews();
-    }, (err) => { console.error(err); $('#count').textContent = 'Avis momentanément indisponibles'; renderReviews(); });
-  } else { $('#count').textContent = 'Avis momentanément indisponibles'; }
+    }, (err) => { console.error(err); $('#count').textContent = T('Avis momentanément indisponibles'); renderReviews(); });
+  } else { $('#count').textContent = T('Avis momentanément indisponibles'); }
 
   // Sélecteur d'étoiles
-  const LABELS = { 1: 'Décevant', 2: 'Moyen', 3: 'Correct', 4: 'Bien', 5: 'Excellent' };
+  const LABELS = { 1: T('Décevant'), 2: T('Moyen'), 3: T('Correct'), 4: T('Bien'), 5: T('Excellent') };
   let rating = 5;
   const pick = $('#starPick');
-  pick.innerHTML = [1, 2, 3, 4, 5].map((i) => `<button type="button" role="radio" data-v="${i}" aria-label="${i} étoile${i > 1 ? 's' : ''} : ${LABELS[i]}"><i class="ph-fill ph-star"></i></button>`).join('') + '<span class="lbl" id="starTxt"></span>';
+  pick.innerHTML = [1, 2, 3, 4, 5].map((i) => `<button type="button" role="radio" data-v="${i}" aria-label="${i} / 5 : ${LABELS[i]}"><i class="ph-fill ph-star"></i></button>`).join('') + '<span class="lbl" id="starTxt"></span>';
   const paint = (n) => { $$('button', pick).forEach((b) => { b.classList.toggle('on', +b.dataset.v <= n); b.setAttribute('aria-checked', String(+b.dataset.v === rating)); }); $('#starTxt').textContent = LABELS[n]; };
   $$('button', pick).forEach((b) => {
     b.addEventListener('click', () => { rating = +b.dataset.v; paint(rating); });
@@ -980,14 +997,14 @@
     e.preventDefault();
     const name = $('#rName').value.trim();
     const text = $('#rText').value.trim();
-    if (!name) { msg('Indique ton prénom.', 'err'); $('#rName').focus(); return; }
-    if (text.length < 3) { msg('Écris quelques mots sur ton expérience.', 'err'); $('#rText').focus(); return; }
-    if (!db) { msg("L'envoi est momentanément indisponible. Réessaie plus tard.", 'err'); return; }
+    if (!name) { msg(T('Indique ton prénom.'), 'err'); $('#rName').focus(); return; }
+    if (text.length < 3) { msg(T('Écris quelques mots sur ton expérience.'), 'err'); $('#rText').focus(); return; }
+    if (!db) { msg(T("L'envoi est momentanément indisponible. Réessaie plus tard."), 'err'); return; }
     // Robots : champ piège rempli, ou formulaire envoyé moins de 4 s après l'ouverture.
-    if ($('#rWebsite').value || Date.now() - OPENED_AT < 4000) { msg('Merci, ton avis est publié.', 'ok'); form.reset(); return; }
+    if ($('#rWebsite').value || Date.now() - OPENED_AT < 4000) { msg(T('Merci, ton avis est publié.'), 'ok'); form.reset(); return; }
     let already = false; try { already = localStorage.getItem('st_review_sent') === '1'; } catch (err) {}
-    if (already) { msg('Tu as déjà donné ton avis depuis cet appareil. Merci !', 'ok'); return; }
-    const btn = $('#rSubmit'), lbl = $('.lbl', btn); btn.disabled = true; lbl.textContent = 'Envoi…';
+    if (already) { msg(T('Tu as déjà donné ton avis depuis cet appareil. Merci !'), 'ok'); return; }
+    const btn = $('#rSubmit'), lbl = $('.lbl', btn); btn.disabled = true; lbl.textContent = T('Envoi…');
     const d = new Date();
     const date = `Le ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     const sent = rating;
@@ -995,7 +1012,7 @@
       await db.collection('reviews').add({ name, rating: sent, text, date, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
       form.reset(); rating = 5; paint(5);
       try { localStorage.setItem('st_review_sent', '1'); } catch (err) {}
-      msg('Merci, ton avis est publié.', 'ok');
+      msg(T('Merci, ton avis est publié.'), 'ok');
       // Notification e-mail à l'équipe (même service que l'ancien site).
       fetch('https://api.web3forms.com/submit', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -1003,8 +1020,8 @@
       }).catch(() => {});
     } catch (err) {
       console.error(err);
-      msg("Ton avis n'a pas pu être envoyé. Vérifie ta connexion et réessaie.", 'err');
-    } finally { btn.disabled = false; lbl.textContent = 'Publier mon avis'; }
+      msg(T("Ton avis n'a pas pu être envoyé. Vérifie ta connexion et réessaie."), 'err');
+    } finally { btn.disabled = false; lbl.textContent = T('Publier mon avis'); }
   });
 
   // ── Liste d'attente iPhone ────────────────────────────────────────
@@ -1013,17 +1030,17 @@
   iosForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = $('#iosEmail').value.trim().toLowerCase();
-    if (!/^[^@\/\s]+@[^@\/\s]+\.[^@\/\s]+$/.test(email) || email.length > 120) { iosMsg('Cette adresse e-mail ne semble pas valide.', 'err'); $('#iosEmail').focus(); return; }
-    if (!db) { iosMsg("L'inscription est momentanément indisponible. Réessaie plus tard.", 'err'); return; }
-    const btn = $('#iosBtn'), lbl = $('.lbl', btn); btn.disabled = true; lbl.textContent = 'Envoi…';
+    if (!/^[^@\/\s]+@[^@\/\s]+\.[^@\/\s]+$/.test(email) || email.length > 120) { iosMsg(T('Cette adresse e-mail ne semble pas valide.'), 'err'); $('#iosEmail').focus(); return; }
+    if (!db) { iosMsg(T("L'inscription est momentanément indisponible. Réessaie plus tard."), 'err'); return; }
+    const btn = $('#iosBtn'), lbl = $('.lbl', btn); btn.disabled = true; lbl.textContent = T('Envoi…');
     try {
       await db.collection('waitlist').doc(email).set({ email, platform: 'ios', lang: (navigator.language || 'fr').slice(0, 10), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-      iosForm.reset(); iosMsg("C'est noté. On t'écrira seulement si ScanTrace arrive sur iPhone.", 'ok');
+      iosForm.reset(); iosMsg(T("C'est noté. On t'écrira seulement si ScanTrace arrive sur iPhone."), 'ok');
     } catch (err) {
       // Adresse déjà inscrite : la base refuse de la réécrire.
-      if (err && err.code === 'permission-denied') { iosForm.reset(); iosMsg('Tu es déjà sur la liste, merci !', 'ok'); }
-      else { console.error(err); iosMsg("L'inscription n'a pas pu être envoyée. Vérifie ta connexion et réessaie.", 'err'); }
-    } finally { btn.disabled = false; lbl.textContent = 'Me prévenir'; }
+      if (err && err.code === 'permission-denied') { iosForm.reset(); iosMsg(T('Tu es déjà sur la liste, merci !'), 'ok'); }
+      else { console.error(err); iosMsg(T("L'inscription n'a pas pu être envoyée. Vérifie ta connexion et réessaie."), 'err'); }
+    } finally { btn.disabled = false; lbl.textContent = T('Me prévenir'); }
   });
 
   // ── Statistiques (visites, clics « rejoindre », présence) ─────────
